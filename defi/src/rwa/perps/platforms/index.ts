@@ -10,6 +10,7 @@ import { extendedAdapter } from "./adapters/extended";
 import { lighterAdapter } from "./adapters/lighter";
 import { edgexAdapter } from "./adapters/edgex";
 import { asterAdapter } from "./adapters/aster";
+import { gmtradeAdapter } from "./adapters/gmtrade";
 
 /** All implemented adapters — used by preview tooling and tests. */
 const ALL_ADAPTERS: PlatformAdapter[] = [
@@ -22,6 +23,7 @@ const ALL_ADAPTERS: PlatformAdapter[] = [
   lighterAdapter,
   edgexAdapter,
   asterAdapter,
+  gmtradeAdapter,
 ];
 
 /** Adapters that are live in the pipeline / cron / API. */
@@ -34,6 +36,7 @@ const PUBLISHED_ADAPTERS: PlatformAdapter[] = [
   lighterAdapter,
   edgexAdapter,
   asterAdapter,
+  gmtradeAdapter,
 ];
 
 const ADAPTER_MAP = new Map<string, PlatformAdapter>(
