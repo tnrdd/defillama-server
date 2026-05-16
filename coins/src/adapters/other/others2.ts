@@ -256,6 +256,24 @@ async function wUSCC(timestamp: number = 0) {
   return getWrites({ chain, timestamp, pricesObject, projectName: "other2", });
 };
 
+async function nDEPS(timestamp: number = 0) {
+  const chain = "ethereum";
+
+  const api = await getApi(chain, timestamp);
+  // dEURO (Frankencoin fork) Equity share nDEPS, and its 1:1 ERC20Wrapper DEPS
+  const ndeps = "0xc71104001A3CCDA1BEf1177d765831Bd1bfE8eE6";
+  const deps = "0x103747924E74708139a9400e4Ab4BEA79FFFA380";
+  const underlying = "0xbA3f535bbCcCcA2A154b573Ca6c5A49BAAE0a3ea"; // dEURO
+  // Equity.price() returns the price of one nDEPS denominated in dEURO, 18 decimals
+  const rawPrice = await api.call({ abi: 'function price() view returns (uint256)', target: ndeps })
+  const price = rawPrice / 1e18
+  const pricesObject: any = {
+    [ndeps]: { price, underlying },
+    [deps]: { price, underlying }, // DEPSWrapper is a 1:1 OZ ERC20Wrapper over nDEPS
+  }
+  return getWrites({ chain, timestamp, pricesObject, projectName: "other2", });
+};
+
 async function prism(timestamp: number = 0) {
   const chain = "ethereum";
 
@@ -275,7 +293,7 @@ async function prism(timestamp: number = 0) {
 export const adapters = {
   solanaAVS,
   wstBFC, stOAS, wSTBT, beraborrow, feUBTC, cabal, cana, pikeSPA,
-  fusdlp, wJAAA, wUSCC, prism, valantisStexAMMs,
+  fusdlp, wJAAA, wUSCC, nDEPS, prism, valantisStexAMMs,
 
   springSUI: async (timestamp: number = 0) => {
     if (timestamp > 0 && Date.now() / 1000 - timestamp > 86400) {
