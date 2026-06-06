@@ -594,6 +594,7 @@ const data3_0: Protocol[] = [
     chains: ["Canto"],
     module: "dummy.js",
     twitter: "CantoPublic",
+    deadUrl: true,
   },
   {
     id: "2727",
@@ -2529,6 +2530,7 @@ const data3_0: Protocol[] = [
     twitter: "spacedexF",
     audit_links: ["https://skynet.certik.com/projects/space-dex"],
     listedAt: 1681240573,
+    deadUrl: true,
     dimensions: {
       dexs: "spacedex-swap",
       derivatives: "spacedex-derivatives"
@@ -2600,6 +2602,7 @@ const data3_0: Protocol[] = [
     module: "agilitylsd/index.js",
     twitter: "agility_lsd",
     listedAt: 1681309758,
+    deadUrl: true,
   },
   {
     id: "2818",
@@ -2707,6 +2710,9 @@ const data3_0: Protocol[] = [
     twitter: "Bonkswap_io",
     parentProtocol: "parent#bonkfun",
     listedAt: 1681384865,
+    dimensions: {
+      fees: "bonkswap",
+    },
   },
   {
     id: "2823",
@@ -2855,7 +2861,7 @@ const data3_0: Protocol[] = [
     name: "TruFin Legacy Vaults",
     address: null,
     symbol: "-",
-    url: "https://trufin.io",
+    url: "https://app.truyields.com",
     description: "(Deprecated) MATIC Staking Vault",
     chain: "Ethereum",
     logo: `${baseIconsUrl}/trufin-legacy-vaults.jpg`,
@@ -2865,7 +2871,7 @@ const data3_0: Protocol[] = [
     category: "Liquid Staking",
     chains: ["Ethereum"],
     module: "trufin/index.js",
-    twitter: "TruFinProtocol",
+    twitter: "TruYields",
     parentProtocol: "parent#trufin-protocol",
     listedAt: 1681468835,
   },
@@ -4498,6 +4504,7 @@ const data3_0: Protocol[] = [
     module: "swaprum/index.js",
     twitter: "Swaprum",
     listedAt: 1682586609,
+    deadUrl: true,
     warningBanners: [
       {
         message: "Swaprum has some red flags and multiple users have reported concerns. Be careful.",
@@ -5575,6 +5582,9 @@ const data3_0: Protocol[] = [
     parentProtocol: "parent#origin-defi",
     twitter: "OriginProtocol",
     listedAt: 1683581147,
+    dimensions: {
+      fees: "origin-ether"
+    }
   },
   {
     id: "2951",
@@ -6723,6 +6733,7 @@ const data3_0: Protocol[] = [
     twitter: "OmniDex1",
     parentProtocol: "parent#omnidex",
     listedAt: 1684751164,
+    deadUrl: true,
   },
   {
     id: "3004",
@@ -6951,7 +6962,7 @@ const data3_0: Protocol[] = [
     category: "Lending",
     chains: ["Ethereum"],
     module: "morpho-aaveV3/index.js",
-    twitter: "MorphoLabs",
+    twitter: "Morpho",
     oraclesBreakdown: [ { name: "Chainlink", type: "Primary", proof: []} ],
     audit_links: ["https://docs.morpho.org/security-reviews"],
     listedAt: 1684901863,
@@ -13021,7 +13032,7 @@ const data3_0: Protocol[] = [
     name: "TruStake",
     address: null,
     symbol: "-",
-    url: "https://app.trufin.io/",
+    url: "https://app.truyields.com",
     description:
       "The TruStake vaults provide access to institutional liquid staking on a variety of proof-of-stake networks.",
     chain: "Ethereum",
@@ -13032,7 +13043,7 @@ const data3_0: Protocol[] = [
     category: "Liquid Staking",
     chains: ["Ethereum"],
     module: "trufin-trustake/index.js",
-    twitter: "TruFinProtocol",
+    twitter: "TruYields",
     audit_links: ["https://trufin.gitbook.io/docs/developers/security-and-audits#security-audits"],
     parentProtocol: "parent#trufin-protocol",
     listedAt: 1690303565,
@@ -13497,6 +13508,9 @@ const data3_0: Protocol[] = [
     audit_links: ["https://github.com/sablier-labs/audits"],
     parentProtocol: "parent#sablier-finance",
     listedAt: 1690655852,
+    dimensions: {
+      dexs: "sablier-lockup"
+    }
   },
   {
     id: "3309",
@@ -13976,7 +13990,8 @@ const data3_0: Protocol[] = [
     listedAt: 1690979758,
     dimensions: {
       fees: "kiloex",
-      derivatives: "kiloex"
+      derivatives: "kiloex",
+      "open-interest": "kiloex"
     }
   },
   {
@@ -22081,6 +22096,10 @@ const data3_1: Protocol[] = [
     forkedFromIds: ["2197"],
     twitter: null,
     listedAt: 1698272175,
+    dimensions: {
+      fees: "everdex",
+      dexs: "everdex"
+    }
   },
   {
     id: "3695",
@@ -26143,6 +26162,7 @@ const data3_1: Protocol[] = [
     listedAt: 1701706347,
     dimensions: {
       fees: "stormtrade",
+      "open-interest": "stormtrade-oi",
       derivatives: {
         adapter: "stormtrade",
         genuineSpikes: [["2025-10-25", "-"]],
@@ -26986,7 +27006,7 @@ const data3_1: Protocol[] = [
     name: "Pharaoh CL",
     address: "avax:0x13a466998ce03db73abc2d4df3bbd845ed1f28e7",
     symbol: "PHAR",
-    url: "https://pharaoh.exchange/swap/",
+    url: "https://www.phar.gg/",
     description: `Pharaoh is a next-generation AMM designed to serve as Avalanche's central liquidity hub, combining the secure and battle-tested superiority of Uniswap v3 with a custom incentive engine, vote-lock governance model, and streamlined user experience.`,
     chain: "Avalanche",
     logo: `${baseIconsUrl}/pharaoh-v3.jpg`,
@@ -29366,7 +29386,7 @@ const data3_1: Protocol[] = [
     //   },
     // ],
     module: "morpho-blue/index.js",
-    twitter: "MorphoLabs",
+    twitter: "Morpho",
     audit_links: ["https://docs.morpho.org/morpho-blue/concepts/security/audits/"],
     parentProtocol: "parent#morpho",
     listedAt: 1705261273,
@@ -29887,6 +29907,7 @@ const data3_1: Protocol[] = [
     chains: ["Ethereum", "Binance", "Optimism", "Arbitrum", "Base", "Polygon"],
     module: "dummy.js",
     twitter: "zerion",
+    parentProtocol: "parent#zerion",
     dimensions: {
       fees: "zerion-wallet"
     }
@@ -30942,6 +30963,9 @@ const data3_1: Protocol[] = [
     twitter: "BinaryxPlatform",
     audit_links: ["https://blaize.tech/clients/smart-contract-security-audit-for-binaryx"],
     listedAt: 1706795799,
+    dimensions: {
+      fees: "binaryx-platform"
+    }
   },
   {
     id: "4092",
@@ -33103,6 +33127,10 @@ const data3_2: Protocol[] = [
     github: ["Scopuly"],
     listedAt: 1709034413,
     deadUrl: true,
+    dimensions: {
+      dexs: "Scopuly",
+      fees: "Scopuly"
+    }
   },
   {
     id: "4182",
@@ -34176,7 +34204,8 @@ const data3_2: Protocol[] = [
     parentProtocol: "parent#bonkfun",
     listedAt: 1709494263,
     dimensions: {
-      fees: "bonk-bot"
+      fees: "bonk-bot",
+      dexs: "bonkbot"
     }
   },
   {
@@ -34308,21 +34337,22 @@ const data3_2: Protocol[] = [
   {
     id: "4234",
     name: "Baseline Protocol",
-    address: "blast:0x1a49351bdb4be48c0009b661765d01ed58e8c2d8",
-    symbol: "YES",
+    address: "ethereum:0x9fdbde76236998dc2836fe67a9954ede456a1d63",
+    symbol: "B",
     url: "https://www.baseline.markets/",
     description:
-      "Baseline is an automated tokenomics engine for ERC20 tokens. By utilizing a dynamic supply model and a basic market making strategy, Baseline gives new ERC20s persistent on-chain liquidity and non-liquidatable leverage right out of the box. When a Baseline token is deployed, it automatically seeds initial liquidity into a Uniswap V3 pool. At launch, 100% of token supply is kept on-chain by the protocol and used to protect their value forever.",
+      "Baseline is a DEX built for project tokens, combining token-owned liquidity with a custom AMM curve for efficient market making, MEV protection, guaranteed floor prices and no-liquidation leverage.",
     chain: "Blast",
     logo: `${baseIconsUrl}/baseline-protocol.jpg`,
     audits: "2",
-    gecko_id: "yes-money",
+    gecko_id: "baseline",
     cmcId: null,
     category: "Liquidity Manager",
-    chains: ["Blast"],
+    chains: ["Blast", "Ethereum", "Base"],
     module: "baseline/index.js",
     twitter: "BaselineMarkets",
-    audit_links: ["https://docs.baseline.markets/assets/audit_trust_security.pdf"],
+    audit_links: ["https://www.baseline.markets/docs/contracts/security"],
+    github: ["0xBaseline"],
     listedAt: 1709554968,
   },
   {
@@ -34979,14 +35009,15 @@ const data3_2: Protocol[] = [
     deadUrl: true,  },
   {
     id: "4265",
-    name: "Superstate USTB",
+    name: "Invesco USTB",
+    previousNames: ["Superstate USTB"],
     address: null,
     symbol: "-",
     url: "https://superstate.com/",
     description:
-      "The Superstate Short Duration U.S. Government Securities Fund (USTB) is a private fund tokenized on the Ethereum blockchain (ERC-20), offered exclusively to Qualified Purchasers. USTB invests in short-duration U.S. Treasury Bills and U.S. Government Agency securities (“Government Securities”) and provides yield targeting returns in line with the federal funds rate.",
+      "The Invesco Short Duration US Government Securities Fund (the Fund) offers Accredited Investors and Qualified Purchasers access to short-duration Treasury Bills. The Fund's investment objective is to seek current income as is consistent with liquidity and stability of principal. Ownership in the Fund is represented by USTB, held either as a token or in book-entry record keeping. Subscriptions and redemptions are facilitated through USD or USDC, with liquidity each market day.",
     chain: "Ethereum",
-    logo: `${baseIconsUrl}/superstate-ustb.jpg`,
+    logo: `${baseIconsUrl}/invesco-ustb.jpg`,
     audits: "0",
     gecko_id: null,
     cmcId: null,
@@ -35481,7 +35512,7 @@ const data3_2: Protocol[] = [
     name: "Pharaoh Legacy",
     address: "avax:0x13a466998ce03db73abc2d4df3bbd845ed1f28e7",
     symbol: "PHAR",
-    url: "https://pharaoh.exchange/swap/",
+    url: "https://www.phar.gg/",
     description:
       "Pharaoh is a next-generation AMM designed to serve as Avalanche's central liquidity hub, combining the secure and battle-tested superiority of Uniswap v3 with a custom incentive engine, vote-lock governance model, and streamlined user experience.",
     chain: "Avalanche",
@@ -35626,7 +35657,8 @@ const data3_2: Protocol[] = [
     module: "dummy.js",
     twitter: "TrojanOnSolana",
     dimensions: {
-      fees: "primordium"
+      fees: "primordium",
+      dexs: "trojan",
     }
   },
   {
@@ -38425,18 +38457,13 @@ const data3_2: Protocol[] = [
     twitter: "ZestProtocol",
     parentProtocol: "parent#zest",
     oraclesBreakdown: [
-      {
-        name: "Pyth",
-        type: "Secondary",
-        proof: ["https://docs.zestprotocol.com/start/borrow/zest-protocol-borrow-overview/oracles#zest-protocol-uses-pyth"]
-      },
-      {
-        name: "DIA",
-        type: "Primary",
-        proof: ["https://explorer.hiro.so/txid/SP2VCQJGH7PHP2DJK7Z0V48AGBHQAW3R3ZW1QF4N.alex-oracle-v1-1?chain=mainnet","https://github.com/DefiLlama/defillama-server/pull/10672"]
-      },
+      {name: "Pyth",type: "Secondary",proof: ["https://docs.zestprotocol.com/start/borrow/zest-protocol-borrow-overview/oracles#zest-protocol-uses-pyth"]},
+      {name: "DIA",type: "Primary",proof: ["https://explorer.hiro.so/txid/SP2VCQJGH7PHP2DJK7Z0V48AGBHQAW3R3ZW1QF4N.alex-oracle-v1-1?chain=mainnet","https://github.com/DefiLlama/defillama-server/pull/10672"]},
     ],
     listedAt: 1712075269,
+    dimensions: {
+      fees: "zest-v1"
+    },
   },
   {
     id: "4421",
@@ -39053,6 +39080,9 @@ const data3_2: Protocol[] = [
     ],
     github: ["superform-xyz"],
     listedAt: 1712365922,
+    dimensions: {
+      fees: "superform",
+    },
   },
   {
     id: "4449",
@@ -39778,7 +39808,7 @@ const data3_2: Protocol[] = [
     address: "0x0d01dc56dcaaca66ad901c959b4011ec",
     symbol: "HYPE",
     url: "https://app.hyperliquid.xyz",
-    referralUrl: "https://app.hyperliquid.xyz/join/DEFILLAMAO",
+    referralUrl: "https://app.hyperliquid.xyz/join/DEFILLAMAS",
     description: "Hyperliquid is a Layer 1 blockchain best known for perpetual futures and spot trading. Native USDC is minted on Hyperliquid via CCTP, and USDC is bridged from Arbitrum.",
     chain: "Arbitrum",
     logo: `${baseIconsUrl}/hyperliquid.png`,
@@ -39832,6 +39862,7 @@ const data3_2: Protocol[] = [
     twitter: "volcano_big",
     audit_links: ["https://volcanofinance.io/Volcano_preliminary-audit-report.pdf"],
     listedAt: 1713279069,
+    deadUrl: true,
   },
   {
     id: "4484",
@@ -42283,14 +42314,14 @@ const data3_2: Protocol[] = [
   },
   {
     id: "4595",
-    name: "Untangled RWA",
+    name: "Untangled old",
     address: null,
     symbol: "-",
     url: "https://untangled.finance/",
     description:
       "Untangled is an institutional-grade RWA credit protocol for fintechs around the world. The protocol has pioneered the first RWA credit oracle infrastructure, enabling dynamic pricing of RWAs with AI-driven risk models and zero-knowledge proof",
     chain: "Celo",
-    logo: `${baseIconsUrl}/untangled.png`,
+    logo: `${baseIconsUrl}/untangled-old.png`,
     audits: "2",
     gecko_id: null,
     cmcId: null,
@@ -45232,6 +45263,10 @@ const data3_3: Protocol[] = [
     twitter: "Lynx_Protocol",
     oraclesBreakdown: [ { name: "Pyth", type: "Primary", proof: [] } ], // https://lynx-finance.gitbook.io/lynx-finance/for-users/traders#pricing / https://github.com/DefiLlama/defillama-server/pull/7359
     listedAt: 1717630515,
+    dimensions: {
+      derivatives: "lynx",
+      fees: "lynx",
+    },
   },
   {
     id: "4730",
@@ -45376,6 +45411,7 @@ const data3_3: Protocol[] = [
     module: "doubleup/index.js",
     twitter: "doubleup_app",
     listedAt: 1717724531,
+    deadUrl: true,
     dimensions: {
       fees: "pumpup"
     }
@@ -46795,7 +46831,14 @@ const data3_3: Protocol[] = [
     listedAt: 1718906602,
     dimensions: {
       fees: "termmax",
-    }
+    },
+    warningBanners: [
+      {
+        message: "This protocol includes unproductive positions that may contribute to inflated metrics. Be safe.",
+        level: "alert",
+        until: "2026-08-17",
+      }
+    ]
   },
   {
     id: "4800",
@@ -46898,6 +46941,10 @@ const data3_3: Protocol[] = [
     twitter: "SoroswapFinance",
     github: ["soroswap"],
     listedAt: 1719170717,
+    dimensions: {
+      fees: "soroswap",
+      dexs: "soroswap"
+    }
   },
   {
     id: "4805",
@@ -48281,7 +48328,7 @@ const data3_3: Protocol[] = [
     cmcId: null,
     category: "Bridge",
     chains: ["Ethereum"],
-    module: "dummy.js",
+    module: "layer-zero/index.js",
     twitter: "LayerZero_Core",
     parentProtocol: "parent#layerzero",
     dimensions: {
@@ -49228,7 +49275,8 @@ const data3_3: Protocol[] = [
     module: "dummy.js",
     twitter: "SolTradingBot",
     dimensions: {
-      fees: "sol-trading-bot"
+      fees: "sol-trading-bot",
+      dexs: "sol-trading-bot",
     }
   },
   {
@@ -49571,20 +49619,21 @@ const data3_3: Protocol[] = [
     name: "AKKA",
     address: null,
     symbol: "-",
-    url: "https://app.akka.finance/",
+    url: "https://akka.finance/",
     description:
-      "Akka is a cross-chain solution enabling liquidity access and service aggregation across multiple blockchains",
+      "Akka is an execution engine for DeFi — powering intelligent trade routing across chains and an AI-driven quant vault on Hyperliquid",
     chain: "Ethereum",
-    logo: `${baseIconsUrl}/akka.png`,
+    logo: `${baseIconsUrl}/akka.jpg`,
     audits: "0",
     gecko_id: null,
     cmcId: null,
     category: "DEX Aggregator",
-    chains: ["Ethereum"],
+    chains: ["Ethereum", "Hyperliquid L1", "CORE"],
     module: "dummy.js",
     twitter: "akka_finance",
     dimensions: {
-      aggregators: "akka"
+      aggregators: "akka",
+      fees: "akka",
     }
   },
   {
@@ -50577,6 +50626,7 @@ const data3_3: Protocol[] = [
     chains: ["Bitcoin"],
     module: "avalance-btc/index.js",
     twitter: "@avax",
+    deprecated: true,
     //parentProtocol: "",
     listedAt: 1723313207,
   },
@@ -51925,7 +51975,7 @@ const data3_3: Protocol[] = [
     tags: ["AMM"],
     chains: ["Stellar"],
     module: "aqua-network/index.js",
-    twitter: "aqua_token",
+    twitter: "AquariusDeFi",
     audit_links: ["https://www.coinfabrik.com/blog/aquarius-audit-report"],
     github: ["AquaToken"],
     listedAt: 1724320620,
@@ -53806,19 +53856,21 @@ const data3_3: Protocol[] = [
     module: "pixel-swap/index.js",
     twitter: "pixelswap_io",
     listedAt: 1725887067,
+    deadUrl: true,
     dimensions: {
       dexs: "pixelswap"
     }
   },
   {
     id: "5120",
-    name: "Superstate USCC",
+    name: "Bitwise USCC",
+    previousNames: ["Superstate USCC"],
     address: null,
     symbol: "-",
     url: "https://superstate.com/",
-    description: "The Superstate Crypto Carry Fund (the “Fund”) offers Qualified Purchasers access to crypto basis (differential between the spot and future price) strategies. The Fund optimizes the yield and risk of crypto cash-and-carry trades across the Bitcoin basis, Ether basis (including staking Ether), and U.S. Treasury securities. ",
+    description: "The Bitwise Crypto Carry Fund (the Fund) offers Qualified Purchasers access to crypto basis strategies, which aim to take advantage of the difference between spot and futures prices. The Fund seeks to optimize the yield and manage the risk of crypto cash-and-carry trades across multiple crypto assets and U.S. Treasury securities. Ownership in the Fund is via the USCC token or book-entry record keeping. Subscriptions and redemptions are facilitated through USD or USDC, with liquidity each market day.",
     chain: "Ethereum",
-    logo: `${baseIconsUrl}/superstate-uscc.jpg`,
+    logo: `${baseIconsUrl}/bitwise-uscc.jpg`,
     audits: "0",
     gecko_id: null,
     cmcId: null,
@@ -57312,6 +57364,9 @@ const data3_3: Protocol[] = [
       Ethereum: ["OETH"],
       Sonic: ["OS"],
     },
+    dimensions: {
+      fees: "origin-arm"
+    }
   },
   {
     id: "5281",
@@ -57450,37 +57505,28 @@ const data3_3: Protocol[] = [
   },
   {
     id: "5287",
-    name: "Bonzo Finance",
+    name: "Bonzo Lend",
     address: "hedera:0x00000000000000000000000000000000007e545e",
     symbol: "BONZO",
     url: "https://bonzo.finance/",
     description: "The Liquidity Layer of Hedera: An open source, non-custodial lending protocol based on Aave",
     chain: "Hedera",
-    logo: `${baseIconsUrl}/bonzo-finance.png`,
+    logo: `${baseIconsUrl}/bonzo-lend.png`,
     audits: "2",
-    gecko_id: "bonzo-finance",
+    gecko_id: null,
     cmcId: null,
     category: "Lending",
     chains: ["Hedera"],
     oraclesBreakdown: [
-      {
-        name: "Chainlink",
-        type: "Primary",
-        proof: ["https://docs.bonzo.finance/hub/developer/oracles/chainlink", "https://bonzo.finance/blog/bonzo-finance-has-integrated-the-chainlink-standard-for-verifiable-data-on-hedera"]
-      },
-            {
-        name: "Supra",
-        type: "Secondary",
-        proof: ["https://docs.bonzo.finance/hub/developer/oracles/supra"]
-      },
+      {name: "Chainlink",type: "Primary",proof: ["https://docs.bonzo.finance/hub/developer/oracles/chainlink", "https://bonzo.finance/blog/bonzo-finance-has-integrated-the-chainlink-standard-for-verifiable-data-on-hedera"]},
+      {name: "Supra",type: "Secondary",proof: ["https://docs.bonzo.finance/hub/developer/oracles/supra"]},
     ],
     forkedFromIds: ["111"],
     module: "bonzo/index.js",
     twitter: "bonzo_finance",
-    treasury: "bonzo.js",
     audit_links: ["https://docs.bonzo.finance/hub/resources/audits"],
-    github: ["Bonzo-Labs"],
     listedAt: 1730054887,
+    parentProtocol: "parent#bonzo-finance",
     dimensions: {
       fees: "bonzo"
     }
@@ -57810,8 +57856,16 @@ const data3_3: Protocol[] = [
     parentProtocol: "parent#bulbaswap",
     listedAt: 1730321388,
     dimensions: {
-      fees: "bulbaswap-v3",
-      dexs: "bulbaswap-v3"
+      fees: {
+        adapter: "bulbaswap-v3",
+        genuineSpikes: [["2026-05-21", "-"]]
+      },
+      dexs: {
+        adapter: "bulbaswap-v3",
+        genuineSpikes: [
+          ["2026-05-21", "Bitget Wallet swap campaign on Morph ($80K USDC rewards)"] //https://x.com/MorphNetwork/status/2057446924677185906
+        ]
+      }
     }
   },
   {
@@ -58175,14 +58229,15 @@ const data3_3: Protocol[] = [
     cmcId: null,
     tags: ["AMM"],
     chains: ["Ethereum"],
-    module: "dummy.js",
+    module: "fluid-dex/index.js",
     twitter: "0xfluid",
     parentProtocol: "parent#fluid",
     listedAt: 1730732495,
     dimensions: {
       fees: "fluid-dex",
       dexs: "fluid-dex"
-    }
+    },
+    excludeTvlFromParent: true // collateral is consolidated across all fluid protocols (total tracked in fluid/index.js)
   },
   {
     id: "5318",
@@ -58622,15 +58677,16 @@ const data3_3: Protocol[] = [
   },
   {
     id: "5338",
-    name: "SolanaHub Staked SOL",
+    name: "Hubra Staked SOL",
+    previousNames: ["SolanaHub Staked SOL"],
     address: null,
     symbol: "-",
     assetToken: "hubSOL",
-    url: "https://www.solanahub.app/",
+    url: "https://www.hubra.app",
     description:
-      "SolanaHub is your all-in-one solution, designed for everyday utility. We prioritize composability and safety and encourage exploration of the Solana ecosystem",
+      "SOL liquid staking on Hubra",
     chain: "Solana",
-    logo: `${baseIconsUrl}/solanahub-staked-sol.jpg`,
+    logo: `${baseIconsUrl}/hubra-staked-sol.jpg`,
     audits: "2",
     gecko_id: null,
     cmcId: null,
@@ -58639,7 +58695,8 @@ const data3_3: Protocol[] = [
     module: "solanahub-sol/index.js",
     twitter: "SolanaHubApp",
     audit_links: ["https://docs.solanahub.app/platform/audits"],
-    listedAt: 1731263252
+    listedAt: 1731263252,
+    parentProtocol: "parent#hubra",
   },
   {
     id: "5339",
@@ -61023,7 +61080,7 @@ const data3_3: Protocol[] = [
     address: "hyperliquid:0x0d01dc56dcaaca66ad901c959b4011ec",
     symbol: "HYPE",
     url: "https://app.hyperliquid.xyz",
-    referralUrl: "https://app.hyperliquid.xyz/join/DEFILLAMAO",
+    referralUrl: "https://app.hyperliquid.xyz/join/DEFILLAMAS",
     description: "Hyperliquidity Provider (HLP) is a protocol vault that provides liquidity to Hyperliquid through multiple market making strategies, performs liquidations, supplies USDC in Earn, and accrues a portion of trading fees. HLP democratizes strategies typically reserved for privileged parties on other exchanges. HLP is fully community-owned.",
     chain: "Hyperliquid L1",
     logo: `${baseIconsUrl}/hyperliquid.png`,
@@ -61586,6 +61643,7 @@ const data3_3: Protocol[] = [
     chains: ["Ethereum","Solana","Binance","Polygon","Base","Arbitrum","zkSync Era"],
     module: "dummy.js",
     twitter: "swing_xyz",
+    deadUrl: true,
     dimensions: {
       fees: "swing",
       aggregators: "swing",
@@ -61951,7 +62009,8 @@ const data3_3: Protocol[] = [
     listedAt: 1734027989,
     dimensions: {
       fees: "sparkdex-perps",
-      derivatives: "sparkdex-perps"
+      derivatives: "sparkdex-perps",
+      "open-interest": "sparkdex-perps-oi"
     }
   },
   {
@@ -62252,7 +62311,7 @@ const data3_3: Protocol[] = [
     address: "hyperliquid:0x0d01dc56dcaaca66ad901c959b4011ec",
     symbol: "HYPE",
     url: "https://app.hyperliquid.xyz",
-    referralUrl: "https://app.hyperliquid.xyz/join/DEFILLAMAO",
+    referralUrl: "https://app.hyperliquid.xyz/join/DEFILLAMAS",
     description: "Hyperliquid is a Layer 1 blockchain best known for perpetual futures and spot trading. Beyond its flagship decentralized exchange (DEX), the ecosystem supports borrowing, lending, RWAs, and a full-fledged EVM.",
     chain: "Hyperliquid L1",
     logo: `${baseIconsUrl}/hyperliquid.png`,

@@ -372,12 +372,13 @@ export async function craftProtocolsResponseInternal(
   const response = (
     await Promise.all(
       protocolList.map(async (protocol) => {
+        const isDummyProtocol = protocol.module === "dummy.js";
         let [lastHourlyRecord, lastHourlyTokensUsd] = await Promise.all([
-          getLastHourlyRecord(protocol),
-          includeTokenBreakdowns ? getLastHourlyTokensUsd(protocol) : {},
+          isDummyProtocol ? null : getLastHourlyRecord(protocol),
+          !isDummyProtocol && includeTokenBreakdowns ? getLastHourlyTokensUsd(protocol) : {},
         ]);
 
-        if (!lastHourlyRecord && protocol.module !== "dummy.js") {
+        if (!lastHourlyRecord && !isDummyProtocol) {
           return null;
         }
 

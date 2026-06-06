@@ -27,7 +27,7 @@ import aptos from "./aptosFa";
 import unichan from "./unichain";
 import flow from "./flow";
 import layerzero from "./layerzero";
-import initia from "./initia";
+// import initia from "./initia";
 import zeroDecimalMappings from "./zeroDecimalMappings";
 import anvu from "./anvu";
 import monad from "./monad";
@@ -91,7 +91,7 @@ export const bridges = [
   unichan,
   flow,
   layerzero,
-  initia, 
+  // initia, 
   anvu,
   monad,
   megaeth,
