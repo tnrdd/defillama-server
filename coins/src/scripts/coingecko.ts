@@ -19,7 +19,7 @@ import {
 import { storeAllTokens } from "../utils/shared/bridgedTvlPostgres";
 import { sendMessage } from "../../../defi/src/utils/discord";
 import { chainsThatShouldNotBeLowerCased } from "../utils/shared/constants";
-import { cacheSolanaTokens, getSymbolAndDecimals, isMetadataBlacklisted } from "./coingeckoUtils";
+import { cacheSolanaTokens, getSymbolAndDecimals, isMetadataBlacklisted, cgIdDenylist } from "./coingeckoUtils";
 import { dualWriteToChRedis } from "../adapters/utils/chRedisWrite";
 import * as sdk from "@defillama/sdk";
 
@@ -100,6 +100,9 @@ const ignoredChainSet = new Set([
   'aelf', 'tdvv-sidechain', 'zano', 'rari', 'codex', 'funki', 'ql1',
   'kasplex-2', 'pundi-aifx-omnilayer', 'zama-gateway-mainnet', 'grx-chain',
 ]);
+
+// cgIdDenylist (apxUSD, wstLINK — priced on-chain) is imported from ./coingeckoUtils so the same set is
+// shared with updateCoin.ts; applied in the coin-list filter in triggerFetchCoingeckoData below.
 
 async function getAndStoreCoins(coins: Coin[], rejected: Coin[]) {
   const coinData = await fetchCgPriceData(coins.map((c) => c.id));
@@ -417,6 +420,7 @@ async function triggerFetchCoingeckoData(hourly: boolean, coinType?: string) {
 
     setTimer();
     let coins: any = await retryCoingeckoRequest('coins/list?include_platform=true', 5)
+    coins = coins.filter((coin: any) => !cgIdDenylist.has(coin.id)); // drop denylisted ids entirely (no price record, no redirects, any chain)
     // coins = coins.filter((coin) => coin.id == 'euro-coin');
     // if (!coins.length) process.exit(0)
 

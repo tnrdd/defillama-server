@@ -502,6 +502,7 @@ const data3_0: Protocol[] = [
     twitter: "FlairDefi",
     listedAt: 1679658222,
     github: ["flair-defi"],
+    deadUrl: true
   },
   {
     id: "2722",
@@ -1174,7 +1175,7 @@ const data3_0: Protocol[] = [
   {
     id: "2753",
     name: "Velocore V1",
-    address: null,
+    address: "era:0x85D84c774CF8e9fF85342684b0E795Df72A24908",
     symbol: "VC",
     url: "https://velocore.xyz",
     description:
@@ -7810,7 +7811,10 @@ const data3_0: Protocol[] = [
     twitter: "FluxBeamDEX",
     listedAt: 1685612658,
     dimensions: {
-      dexs: "fluxbeam",
+      dexs: {
+        adapter: "fluxbeam",
+        genuineSpikes: [["2026-06-05", "-"]],
+      },
       fees: "fluxbeam"
     }
   },
@@ -8663,7 +8667,8 @@ const data3_0: Protocol[] = [
     listedAt: 1686243248,
     dimensions: {
       dexs: "miaswap"
-    }
+    },
+    deadUrl: true,
   },
   {
     id: "3091",
@@ -8842,6 +8847,7 @@ const data3_0: Protocol[] = [
     module: "onus-usdo/index.js",
     twitter: "USDOcoin",
     listedAt: 1686358004,
+    deadUrl: true,
     dimensions: {
       fees: "usdo"
     }
@@ -13997,7 +14003,7 @@ const data3_0: Protocol[] = [
   {
     id: "3330",
     name: "Velocore V2",
-    address: null,
+    address: "era:0x85D84c774CF8e9fF85342684b0E795Df72A24908",
     symbol: "VC",
     url: "https://velocore.xyz",
     description:
@@ -16987,6 +16993,7 @@ const data3_1: Protocol[] = [
     twitter: "KinetixFi",
     parentProtocol: "parent#kinetix",
     listedAt: 1693433723,
+    deadUrl: true,
     dimensions: {
       fees: "kinetix-v1",
       dexs: "kinetix-derivative"
@@ -17397,7 +17404,8 @@ const data3_1: Protocol[] = [
     dimensions: {
       fees: "morphex-old",
       derivatives: "morphex-old-derivatives"
-    }
+    },
+    deadUrl: true,
   },
   {
     id: "3484",
@@ -18531,6 +18539,7 @@ const data3_1: Protocol[] = [
     twitter: "KinetixFi",
     parentProtocol: "parent#kinetix",
     listedAt: 1695101307,
+    deadUrl: true,
     dimensions: {
       fees: "kinetix-v2",
       dexs: "kinetix-v2"
@@ -18555,6 +18564,7 @@ const data3_1: Protocol[] = [
     twitter: "KinetixFi",
     parentProtocol: "parent#kinetix",
     listedAt: 1695105662,
+    deadUrl: true,
     dimensions: {
       fees: "kinetix-v3",
       dexs: "kinetix-v3"
@@ -24616,6 +24626,7 @@ const data3_1: Protocol[] = [
     module: "alephium-bridge/index.js",
     twitter: "alephium",
     listedAt: 1700489950,
+    deadUrl: true,
   },
   {
     id: "3814",
@@ -27137,13 +27148,13 @@ const data3_1: Protocol[] = [
   },
   {
     id: "3927",
-    name: "Bebop",
+    name: "Bebop Aggregator",
     address: null,
     symbol: "-",
     url: "https://bebop.xyz/",
     description: "Buy or sell, we'll execute it. Seamless and efficient crypto trading for everyone",
     chain: "Ethereum",
-    logo: `${baseIconsUrl}/bebop.png`,
+    logo: `${baseIconsUrl}/bebop-aggregator.jpg`,
     audits: "0",
     gecko_id: null,
     cmcId: null,
@@ -27153,6 +27164,7 @@ const data3_1: Protocol[] = [
     treasury: null,
     twitter: "bebop_dex",
     listedAt: 1702771200,
+    parentProtocol: "parent#bebop",
     dimensions: {
       aggregators: "bebop"
     }
@@ -31444,6 +31456,7 @@ const data3_1: Protocol[] = [
     twitter: "KinetixFi",
     parentProtocol: "parent#kinetix",
     listedAt: 1707231637,
+    deadUrl: true,
     dimensions: {
       fees: "kinetix-derivatives-v2",
       derivatives: "kinetix-derivatives-v2"
@@ -33303,6 +33316,7 @@ const data3_2: Protocol[] = [
     module: "kaleidoswap/index.js",
     twitter: "kaleidocube_xyz",
     listedAt: 1709130785,
+    deadUrl: true
   },
   {
     id: "4190",
@@ -33530,8 +33544,8 @@ const data3_2: Protocol[] = [
   {
     id: "4199",
     name: "Thruster V3",
-    address: null,
-    symbol: "-",
+    address: "blast:0xe36072dd051ce26261bf50cd966311cab62c596e",
+    symbol: "THRUST",
     url: "https://app.thruster.finance",
     description: "Uni v3 fork on blast",
     chain: "Blast",
@@ -33726,8 +33740,8 @@ const data3_2: Protocol[] = [
   {
     id: "4207",
     name: "Thruster V2",
-    address: null,
-    symbol: "-",
+    address: "blast:0xe36072dd051ce26261bf50cd966311cab62c596e",
+    symbol: "THRUST",
     url: "https://app.thruster.finance",
     description: "Uniswap V2 fork on Blast",
     chain: "Blast",
@@ -41460,7 +41474,7 @@ const data3_2: Protocol[] = [
   {
     id: "4556",
     name: "ZetaChain",
-    address: null,
+    address: "ethereum:0xf091867ec603a6628ed83d274e835539d82e9cc8",
     symbol: "ZETA",
     url: "https://www.zetachain.com/",
     description:
@@ -42823,7 +42837,7 @@ const data3_2: Protocol[] = [
   {
     id: "4618",
     name: "Internet Computer",
-    address: null,
+    address: "icp:ryjl3-tyaaa-aaaaa-aaaba-cai",
     symbol: "ICP",
     url: "https://internetcomputer.org/",
     description: "Compute on blockchain.",
@@ -43318,7 +43332,7 @@ const data3_2: Protocol[] = [
   {
     id: "4641",
     name: "AltLayer",
-    address: null,
+    address: "ethereum:0x8457ca5040ad67fdebbcc8edce889a335bc0fbfb",
     symbol: "ALT",
     url: "https://www.altlayer.io/",
     description:
@@ -43380,7 +43394,7 @@ const data3_2: Protocol[] = [
   {
     id: "4644",
     name: "Big Time",
-    address: null,
+    address: "ethereum:0x64bc2ca1be492be7185faa2c8835d9b824c8a194",
     symbol: "BIGTIME",
     url: "https://bigtime.gg/",
     description: "Onchain gaming.",
@@ -43739,6 +43753,7 @@ const data3_2: Protocol[] = [
     forkedFromIds: ["2197"],
     parentProtocol: "parent#linehub",
     listedAt: 1716426592,
+    deadUrl: true,
     dimensions: {
       fees: "linehub-v2",
       dexs: "linehub-v2"
@@ -43763,6 +43778,7 @@ const data3_2: Protocol[] = [
     forkedFromIds: ["2198"],
     parentProtocol: "parent#linehub",
     listedAt: 1716426597,
+    deadUrl: true,
     dimensions: {
       fees: "linehub-v3",
       dexs: "linehub-v3"
@@ -45448,7 +45464,7 @@ const data3_3: Protocol[] = [
     chain: "TON",
     logo: `${baseIconsUrl}/tradoor-ton.jpg`,
     audits: "2",
-    gecko_id: null,
+    gecko_id: "tradoor",
     cmcId: null,
     category: "Derivatives",
     chains: ["TON"],
@@ -45507,8 +45523,8 @@ const data3_3: Protocol[] = [
     // previous Summer.fi
     name: "Summer.fi Pro",
     // previousNames: ["Summer.fi"], this was causing problems, since it was using the name that we attribute to the parentProtocol
-    address: null,
-    symbol: "-",
+    address: "base:0x194f360d130f2393a5e9f3117a6a1b78abea1624",
+    symbol: "SUMR",
     url: "https://summer.fi/earn?referralCode=2001317",
     description:
       "Borrow, Multiply and Earn on the assets you hold across multiple protocols. Take advantage of powerful automation strategies and simple UX.",
@@ -46726,7 +46742,7 @@ const data3_3: Protocol[] = [
   {
     id: "4796",
     name: "Sanko Bridge",
-    address: null,
+    address: "arbitrum:0x8b0e6f19ee57089f7649a455d89d7bc6314d04e8",
     symbol: "DMT",
     url: "https://sanko.xyz/",
     description:
@@ -46745,7 +46761,7 @@ const data3_3: Protocol[] = [
   {
     id: "4797",
     name: "XAI Bridge",
-    address: null,
+    address: "arbitrum:0x4cb9a7ae498cedcbb5eae9f25736ae7d428c9d66",
     symbol: "XAI",
     url: "https://xai.games/",
     description:
@@ -47805,6 +47821,7 @@ const data3_3: Protocol[] = [
     twitter: "LineDefiHub",
     parentProtocol: "parent#linehub",
     listedAt: 1720041593,
+    deadUrl: true,
     dimensions: {
       fees: "linehub-perps",
       derivatives: "linehub-perps"
@@ -48123,7 +48140,7 @@ const data3_3: Protocol[] = [
   {
     id: "4858",
     name: "Mind Network",
-    address: null,
+    address: "ethereum:0xd55c9fb62e176a8eb6968f32958fefdd0962727e",
     symbol: "FHE",
     url: "https://www.mindnetwork.xyz",
     description: "Mind Network is a pioneer FHE (Fully Homomorphic Encryption) infrastructure for a Fully Encrypted Web by enabling quantum-resistant, fully encrypted data and AI computation. It co-builds a Zero Trust Internet Protocol (HTTPZ) with industry leaders to enable trusted AI and onchain data computation as a new Web3 standard.",
@@ -50719,6 +50736,7 @@ const data3_3: Protocol[] = [
     module: "firoza-finance/index.js",
     twitter: "LibFi_io",
     listedAt: 1723489129,
+    deadUrl: true,
   },
   {
     id: "4977",
@@ -51214,7 +51232,7 @@ const data3_3: Protocol[] = [
     name: "Clave",
     address: null,
     symbol: "-",
-    url: "https://getclave.io",
+    url: "https://www.getclave.com/",
     description:
       "Clave is an easy-to-use, non-custodial smart wallet powered by Account Abstraction and the hardware-level security elements (e.g., Secure Enclave, Android Trustzone, etc.) to simplify the onchain experience for the next billions. By empowering users with a user-friendly and secure bridge to seamlessly integrate their assets into everyday life, Clave delivers a comprehensive fintech solution, ensuring a holistic financial experience for all",
     chain: "zkSync Era",
@@ -52024,7 +52042,8 @@ const data3_3: Protocol[] = [
     chains: ["Wax"],
     module: "neftyblocks/index.js",
     twitter: "neftyblocks",
-    listedAt: 1724412437
+    listedAt: 1724412437,
+    deadUrl: true
   },
   {
     id: "5038",
@@ -53793,7 +53812,8 @@ const data3_3: Protocol[] = [
     parentProtocol: "parent#morphex",
     dimensions: {
       dexs: "morphex-swap"
-    }
+    },
+    deadUrl: true,
   },
   {
     id: "5117",
@@ -53994,7 +54014,8 @@ const data3_3: Protocol[] = [
     parentProtocol: "parent#morphex",
     dimensions: {
       dexs: "morphex-old-swap"
-    }
+    },
+    deadUrl: true,
   },
   {
     id: "5126",
@@ -55386,7 +55407,8 @@ const data3_3: Protocol[] = [
     twitter: "moonshot",
     parentProtocol: "parent#moonshot",
     dimensions: {
-      fees: "moonshot-money"
+      fees: "moonshot-money",
+      dexs: "moonshot-money"
     }
   },
   {
@@ -59506,7 +59528,7 @@ const data3_3: Protocol[] = [
   {
     id: "5375",
     name: "Zircuit",
-    address: null,
+    address: "ethereum:0xfd418e42783382e86ae91e445406600ba144d162",
     symbol: "ZRC",
     url: "https://www.zircuit.com/",
     description: "Experience the safest chain for DeFi and staking. Developers get powerful features; users get peace of mind.",
@@ -60257,7 +60279,8 @@ const data3_3: Protocol[] = [
     module: "dummy.js",
     twitter: "bullx_io",
     dimensions: {
-      fees: "bullx"
+      fees: "bullx",
+      dexs: "bullx"
     }
   },
   {
@@ -60279,7 +60302,8 @@ const data3_3: Protocol[] = [
     module: "dummy.js",
     twitter: "gmgnai",
     dimensions: {
-      fees: "gmgnai"
+      fees: "gmgnai",
+      dexs: "gmgnai"
     }
   },
   {
@@ -61630,7 +61654,7 @@ const data3_3: Protocol[] = [
   {
     id: "5474",
     name: "Swing",
-    address: null,
+    address: "ethereum:0xd8dd38ca016f3e0b3bc545d33cce72af274ce075",
     symbol: "$SWING",
     url: "https://swing.xyz/",
     description: "Swing is a digital asset API platform offering liquidity routing services for web2 & web3 businesses",
@@ -61687,7 +61711,8 @@ const data3_3: Protocol[] = [
     module: "gud-tech/index.js",
     twitter: "gudtech_ai",
     audit_links: ["https://docs.gud.tech/audits"],
-    listedAt: 1733597319
+    listedAt: 1733597319,
+    deadUrl: true,
   },
   /*
   {

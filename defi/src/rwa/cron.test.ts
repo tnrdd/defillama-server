@@ -1,5 +1,6 @@
 jest.mock('./file-cache', () => ({
   storeRouteData: jest.fn(async () => {}),
+  storeRouteDataWithWriter: jest.fn(async () => {}),
   clearOldCacheVersions: jest.fn(async () => {}),
   getCacheVersion: jest.fn(() => 'test'),
   getSyncMetadata: jest.fn(async () => null),
@@ -36,8 +37,24 @@ jest.mock('./alerting', () => ({
 jest.mock('../protocols/parentProtocols', () => ({ parentProtocolsById: {} }));
 jest.mock('../protocols/data', () => ({ protocolsById: {} }));
 
-import { readPGCacheForId, storeRouteData } from './file-cache';
+import { readPGCacheForId, storeRouteData, storeRouteDataWithWriter } from './file-cache';
 import { generateAggregatedHistoricalCharts } from './cron';
+
+// Asset-breakdown files are written via the streaming `storeRouteDataWithWriter`
+// (chunked JSON) rather than `storeRouteData`. Reconstruct each file by re-running
+// the real production writer closure and parsing the concatenated chunks, so the
+// test asserts against actual prod output instead of a reimplementation.
+async function collectStoredRouteData(): Promise<Map<string, any>> {
+  const stored = new Map<string, any>(
+    (storeRouteData as jest.Mock).mock.calls.map(([path, data]) => [path, data])
+  );
+  for (const [path, writeData] of (storeRouteDataWithWriter as jest.Mock).mock.calls) {
+    let buffer = '';
+    await writeData(async (chunk: string) => { buffer += chunk; });
+    stored.set(path, JSON.parse(buffer));
+  }
+  return stored;
+}
 
 describe('generateAggregatedHistoricalCharts', () => {
   beforeEach(() => {
@@ -80,7 +97,7 @@ describe('generateAggregatedHistoricalCharts', () => {
       },
     ]);
 
-    const storedByPath = new Map((storeRouteData as jest.Mock).mock.calls.map(([path, data]) => [path, data]));
+    const storedByPath = await collectStoredRouteData();
 
     expect(storedByPath.has('charts/category/other-rwas.json')).toBe(false);
     expect(storedByPath.has('charts/category/treasury-bills.json')).toBe(true);

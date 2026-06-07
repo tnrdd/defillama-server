@@ -1599,14 +1599,14 @@ const data: Protocol[] = [
   },
   {
     id: "177",
-    name: "Defi Saver",
+    name: "Defi Saver Asset Management",
     address: null,
     symbol: "-",
     url: "https://defisaver.com/",
     description:
       "DeFi Saver is a one-stop management solution for decentralized finance with advanced leverage management tools and unique automated management features.",
     chain: "Ethereum",
-    logo: `${baseIconsUrl}/defi-saver.jpg`,
+    logo: `${baseIconsUrl}/defi-saver-asset-management.jpg`,
     audits: "2",
     gecko_id: null,
     cmcId: null,
@@ -1615,7 +1615,7 @@ const data: Protocol[] = [
     module: "defisaver.js",
     twitter: "DefiSaver",
     audit_links: ["https://consensys.net/diligence/audits/2021/03/defi-saver/"],
-    github: ["defisaver"],
+    parentProtocol: "parent#defi-saver",
     dimensions: {
       fees: "defi-saver"
     }
@@ -5481,6 +5481,7 @@ const data: Protocol[] = [
     twitter: "InsurAce_io",
     audit_links: ["https://docs.insurace.io/landing-page/documentation/security-1"],
     github: ["InsurAce-Protocol"],
+    deadUrl: true,
   },
   {
     id: "355",
@@ -8353,6 +8354,7 @@ The eWIT token is a custodial, wrapped version of the Witnet coin managed by the
     twitter: "SonicSwapIO",
     forkedFromIds: ["2197"],
     github: ["SonicSwap"],
+    deadUrl: true,
   },
   {
     id: "482",
@@ -10798,6 +10800,7 @@ The eWIT token is a custodial, wrapped version of the Witnet coin managed by the
     ],
     twitter: "MultichainOrg",
     github: ["anyswap"],
+    deadUrl: true,
     warningBanners: [
       {
         message: "Please avoid using Multichain. The Multichain team doesn't control the keys and your money will get stuck/lost.",
@@ -16325,6 +16328,7 @@ The eWIT token is a custodial, wrapped version of the Witnet coin managed by the
     twitter: "tezaliensfarm",
     forkedFromIds: ["513"],
     listedAt: 1637268641,
+    deadUrl: true
   },
   {
     id: "858",
@@ -18970,6 +18974,7 @@ The eWIT token is a custodial, wrapped version of the Witnet coin managed by the
     twitter: "ChefGrandpa",
     forkedFromIds: ["2197"],
     listedAt: 1638681578,
+    deadUrl: true,
   },
   {
     id: "979",
@@ -19442,6 +19447,7 @@ The eWIT token is a custodial, wrapped version of the Witnet coin managed by the
     twitter: "GizaDao",
     forkedFromIds: ["340"],
     listedAt: 1639100829,
+    deadUrl: true,
   },
   {
     id: "1002",
@@ -20335,6 +20341,7 @@ The eWIT token is a custodial, wrapped version of the Witnet coin managed by the
     listedAt: 1639805654,
     wrongLiquidity: true,
     github: ["Solanafarm"],
+    deadUrl: true,
   },
   {
     id: "1043",
@@ -24937,6 +24944,7 @@ The eWIT token is a custodial, wrapped version of the Witnet coin managed by the
     twitter: "Delta_Token",
     listedAt: 1642141415,
     github: ["Delta-Financial"],
+    deadUrl: true,
   },
   {
     id: "1257",

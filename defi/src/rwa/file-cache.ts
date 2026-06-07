@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Bump this version to reset the cache
-const CACHE_VERSION = 'v3.11';
+const CACHE_VERSION = 'v3.12';
 
 const CACHE_DIR = process.env.RWA_CACHE_DIR || path.join(__dirname, '.rwa-cache');
 const VERSIONED_CACHE_DIR = path.join(CACHE_DIR, CACHE_VERSION);
@@ -37,6 +37,14 @@ export async function storeRouteData(subPath: string, data: any): Promise<void> 
     return storeData(subPath, data);
 }
 
+export async function storeRouteDataWithWriter(
+    subPath: string,
+    writeData: (writeChunk: (chunk: string) => Promise<void>) => Promise<void>
+): Promise<void> {
+    subPath = fileNameNormalizer(`build/${subPath}`);
+    return storeDataWithWriter(subPath, writeData);
+}
+
 export async function readRouteData(subPath: string, options: {
     skipErrorLog?: boolean;
     readAsArrayBuffer?: boolean;
@@ -53,6 +61,49 @@ async function storeData(subPath: string, data: any): Promise<void> {
         await fs.promises.writeFile(filePath, JSON.stringify(data));
     } catch (e) {
         console.error(`Error storing data to ${filePath}:`, (e as any)?.message);
+    }
+}
+
+async function storeDataWithWriter(
+    subPath: string,
+    writeData: (writeChunk: (chunk: string) => Promise<void>) => Promise<void>
+): Promise<void> {
+    const filePath = path.join(VERSIONED_CACHE_DIR, subPath);
+    const dirPath = path.dirname(filePath);
+    const tempFilePath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+    let handle: fs.promises.FileHandle | undefined;
+    let buffer = '';
+    const maxBufferLength = 1024 * 1024;
+
+    await ensureDirExists(dirPath);
+    try {
+        handle = await fs.promises.open(tempFilePath, 'w');
+        const flushBuffer = async () => {
+            if (!buffer) return;
+            // Loop until the whole buffer is written: FileHandle.write may perform
+            // a short write (bytesWritten < length), and a temp file truncated here
+            // would be published as corrupt JSON by the rename below.
+            const data = Buffer.from(buffer);
+            let offset = 0;
+            while (offset < data.length) {
+                const { bytesWritten } = await handle!.write(data, offset, data.length - offset);
+                offset += bytesWritten;
+            }
+            buffer = '';
+        };
+        await writeData(async (chunk: string) => {
+            if (!chunk) return;
+            buffer += chunk;
+            if (buffer.length >= maxBufferLength) await flushBuffer();
+        });
+        await flushBuffer();
+        await handle.close();
+        handle = undefined;
+        await fs.promises.rename(tempFilePath, filePath);
+    } catch (e) {
+        console.error(`Error storing data to ${filePath}:`, (e as any)?.message);
+        if (handle) await handle.close().catch(() => undefined);
+        await fs.promises.rm(tempFilePath, { force: true }).catch(() => undefined);
     }
 }
 

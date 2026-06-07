@@ -188,6 +188,7 @@ const data5: Protocol[] = [
     twitter: "phi_xyz",
     audit_links: ["https://docs.phi.box/explore-phi/others/audit"],
     listedAt: 1761171731,
+    deadUrl: true
   },
   {
     id: "6901",
@@ -2113,6 +2114,7 @@ const data5: Protocol[] = [
       fees: "luna-fun",
       dexs: "luna-fun",
     },
+    deadUrl: true,
   },
   {
     id: "6984",
@@ -2478,8 +2480,8 @@ const data5: Protocol[] = [
   {
     id: "7000",
     name: "Kodiak Perps",
-    address: null,
-    symbol: "-",
+    address: "berachain:0xc0d1ac00a30fa4e30e44afc7313d6312c87e21df",
+    symbol: "KDK",
     url: "https://perps.kodiak.finance/",
     description: "Kodiak's Perps DEX",
     chain: "Orderly",
@@ -4772,8 +4774,8 @@ const data5: Protocol[] = [
   {
     id: "7096",
     name: "Kodiak Islands",
-    address: null,
-    symbol: "-",
+    address: "berachain:0xc0d1ac00a30fa4e30e44afc7313d6312c87e21df",
+    symbol: "KDK",
     url: "https://app.kodiak.finance",
     description: "Liquidity Manager for Kodiak DEX",
     chain: "Berachain",
@@ -5155,7 +5157,7 @@ const data5: Protocol[] = [
   {
     id: "7114",
     name: "Everclear",
-    address: null,
+    address: "ethereum:0x58b9cb810a68a7f3e1e4f8cb45d1b9b3c79705e8",
     symbol: "CLEAR",
     url: "https://www.everclear.org/",
     description: "The Crosschain Clearing and Settlement Protocol.",
@@ -5721,8 +5723,8 @@ const data5: Protocol[] = [
   {
     id: "7141",
     name: "Lighter Spot",
-    address: null,
-    symbol: "-",
+    address: "ethereum:0x232ce3bd40fcd6f80f3d55a522d03f25df784ee2",
+    symbol: "LIT",
     url: "https://app.lighter.xyz/trade/ETH?referral=FHT1N8AYKHP4",
     referralUrl: "https://app.lighter.xyz/trade/ETH?referral=FHT1N8AYKHP4",
     description:
@@ -11210,7 +11212,7 @@ const data5: Protocol[] = [
     dimensions: {
       dexs: {
         adapter: "egas-swap",
-        genuineSpikes: [["2026-05-09", "-"]]
+        genuineSpikes: [["2026-05-09", "-"], ["2026-06-05", "-"]],
       },
     },
   },
@@ -11735,8 +11737,8 @@ const data5: Protocol[] = [
   {
     id: "7423",
     name: "MineBTC",
-    address: "solana:BwMCF5LSHPvrR8pLVvcsa4k1AMg4VWVnMWUiNEXMtLkE",
-    symbol: "dogeBTC",
+    address: "solana:CtAu3kc8cQ1jcDMmRTBsDHoPuE3sswCagQ3BuqFDC6dt",
+    symbol: "dBTC",
     url: "https://minebtc.fun",
     description: "A speculative entertainment and betting experiment building a fully AI-driven reserve currency on Solana. Players compete in 60-second faction warfare rounds to mine $dogeBTC — a deflationary Token-2022 with self-adjusting emissions that respond to market conditions. Features evolvable AI-generated Doge NFTs that power lore, gaming, and an AI content engine.",
     chain: "Solana",
@@ -11860,8 +11862,8 @@ const data5: Protocol[] = [
   {
     id: "7429",
     name: "Murasaki",
-    address: null,
-    symbol: "-",
+    address: "bsc:0x166295ebd6a938c7aaf61350eb5161a9939ab2b7",
+    symbol: "MURA",
     url: "https://murasaki.club/",
     description:
       "Murasaki is the first metaverse ACG virtual idol and decentralized IP ecological community. It aims to create the most valuable virtual idol created and owned.",
@@ -12765,6 +12767,7 @@ const data5: Protocol[] = [
     twitter: "RushSports_xyz",
     github: ["gfenney"],
     listedAt: 1772205515,
+    deadUrl: true,
   },
   {
     id: "7473",
@@ -13544,25 +13547,26 @@ const data5: Protocol[] = [
     twitter: "zenydex",
     listedAt: 1772813449,
   },
-  // { Duplicate of AlphaLend
-  //   id: "7510",
-  //   name: "Lending by AlphaFi",
-  //   address: "sui:0xfe3afec26c59e874f3c1d60b8203cb3852d2bb2aa415df9548b8d688e6683f93::alpha::ALPHA",
-  //   symbol: "ALPHA",
-  //   url: "https://alphafi.xyz/",
-  //   description: "Lending by AlphaFi is a lending protocol on SUI.",
-  //   chain: "Sui",
-  //   logo: `${baseIconsUrl}/lending-by-alphafi.jpg`,
-  //   audits: "0",
-  //   gecko_id: null,
-  //   cmcId: null,
-  //   category: "Lending",
-  //   chains: ["Sui"],
-  //   module: "lending-by-alphafi/index.js",
-  //   twitter: "AlphaFiSUI",
-  //   parentProtocol: "parent#alphafi",
-  //   listedAt: 1772813455,
-  // },
+  {
+    id: "7510",
+    name: "AlphaFi Lending",
+    address: "sui:0xfe3afec26c59e874f3c1d60b8203cb3852d2bb2aa415df9548b8d688e6683f93::alpha::ALPHA",
+    symbol: "ALPHA",
+    url: "https://alphafi.xyz/",
+    description: "AlphaLend is a DeFi protocol on the Sui blockchain that enables permissionless lending and borrowing of digital assets. By depositing assets into the protocol, users can earn interest or use their holdings as collateral to access liquidity. Designed with security and composability in mind, AlphaLend provides essential financial primitives for building and interacting with decentralized applications.",
+    chain: "Sui",
+    logo: `${baseIconsUrl}/lending-by-alphafi.jpg`,
+    audits: "2",
+    gecko_id: null,
+    cmcId: null,
+    category: "Lending",
+    chains: ["Sui"],
+    module: "lending-by-alphafi/index.js",
+    twitter: "AlphaFiSUI",
+    audit_links: ["https://movebit.xyz/reports/20241214-AlphaFi-Smart-Contarct-Final-Audit-Report.pdf"],
+    parentProtocol: "parent#alphafi",
+    listedAt: 1772813455,
+  },
   {
     id: "7511",
     name: "BarterSwap Solver",
@@ -14873,6 +14877,9 @@ const data5: Protocol[] = [
     chains: ["Ethereum"],
     module: "dummy.js",
     twitter: "worldlibertyfi",
+    dimensions: {
+      fees: "world-liberty-financial"
+    }
   },
   {
     id: "7572",
@@ -16336,7 +16343,7 @@ const data5: Protocol[] = [
   {
     id: "7638",
     name: "Redbelly Network",
-    address: null,
+    address: "ethereum:0xb45ffb51984d626ee758b336c61cf20990c6bf13",
     symbol: "RBNT",
     url: "https://redbelly.network/",
     description: "Enabling asset issuers to tokenise and trade compliant onchain structured products",
@@ -16739,7 +16746,7 @@ const data5: Protocol[] = [
     twitter: "Polymarket",
     parentProtocol: "parent#polymarket",
     dimensions: {
-      fees: "polymarket-us",
+      //fees: "polymarket-us", similar to kalshi, no transparency
       "open-interest": "polymarket-us-oi",
       dexs: "polymarket-us",
     }

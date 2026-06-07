@@ -54,6 +54,7 @@ export const metricsProtocolSchema = z.object({
   total30d: z.number().nullable().optional(),
   total60dto30d: z.number().nullable().optional(),
   total1y: z.number().nullable().optional(),
+  annualized1y: z.number().nullable().optional(),
   totalAllTime: z.number().nullable().optional(),
 
   // Percentage changes

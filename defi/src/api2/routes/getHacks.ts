@@ -8,9 +8,12 @@ export async function getHacksInternal() {
     .map((r) => {
       const defillamaId = r.fields["DefiLlama Id"] ?? null;
       const protocol = defillamaId ? protocols.find((p) => p.id == defillamaId) : null;
-      
+
+      let date: any = Math.floor(new Date(r.fields["Date"]).getTime() / 1000)
+      if (isNaN(date)) date = null;
+
       return {
-        date: new Date(r.fields["Date"]).getTime() / 1000,
+        date,
         name: protocol?.name ?? r.fields["Name"],
         classification: r.fields["Classification"] ?? null,
         technique: r.fields["Technique"] ?? null,

@@ -75,6 +75,16 @@ describe('Volumes API - Overview DEXs', () => {
           expectValidNumber(overviewResponse.data.total7d);
           expectNonNegativeNumber(overviewResponse.data.total7d);
         }
+
+        if (overviewResponse.data.total1y !== null && overviewResponse.data.total1y !== undefined) {
+          expectValidNumber(overviewResponse.data.total1y);
+          expectNonNegativeNumber(overviewResponse.data.total1y);
+        }
+
+        if (overviewResponse.data.annualized1y !== null && overviewResponse.data.annualized1y !== undefined) {
+          expectValidNumber(overviewResponse.data.annualized1y);
+          expectNonNegativeNumber(overviewResponse.data.annualized1y);
+        }
       });
 
       it('should have chronologically ordered chart data', () => {

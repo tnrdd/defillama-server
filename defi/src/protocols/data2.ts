@@ -16730,6 +16730,7 @@ const data2: Protocol[] = [
     twitter: "DeFi_Franc",
     listedAt: 1664485760,
     stablecoins: ["defi-franc"],
+    deadUrl: true,
   },
   {
     id: "2138",
@@ -20686,7 +20687,10 @@ const data2: Protocol[] = [
     wrongLiquidity: true,
     github: ["IndigoProtocol"],
     dimensions: {
-      fees: "indigo"
+      fees: {
+        adapter: "indigo",
+        genuineSpikes: [["2026-06-05", "Large liquidation fee due to $ADA and global crypto market crash"]],
+      }
     }
   },
   {
@@ -23491,6 +23495,7 @@ const data2: Protocol[] = [
     module: "zeniq-swap/index.js",
     twitter: "Zeniq_corp",
     listedAt: 1673786256,
+    deadUrl: true,
   },
   {
     id: "2439",
@@ -23762,6 +23767,7 @@ const data2: Protocol[] = [
     module: "quadrat/index.js",
     twitter: "0xQuadrat",
     listedAt: 1674041475,
+    deadUrl: true,
   },
   {
     id: "2452",
@@ -24874,6 +24880,7 @@ const data2: Protocol[] = [
     treasury: "pleasrdao.js",
     twitter: "PleasrDAO",
     github: ["PleasrDAO"],
+    deadUrl: true,
   },
   {
     id: "2504",
@@ -27621,6 +27628,7 @@ const data2: Protocol[] = [
     treasury: "cat-in-a-box.js",
     twitter: "catinaboxfi",
     listedAt: 1677778463,
+    deadUrl: true,
   },
   {
     id: "2628",
@@ -28391,6 +28399,7 @@ const data2: Protocol[] = [
     twitter: "MorphexFTM",
     parentProtocol: "parent#morphex",
     listedAt: 1678706137,
+    deadUrl: true,
     dimensions: {
       fees: "morphex",
       derivatives: "morphex-derivatives"

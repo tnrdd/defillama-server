@@ -38,6 +38,7 @@ const protocolChainBreakdownKeys : string[] = [
   'total30d',
   'total60dto30d',
   'total1y',
+  'annualized1y',
   'total7DaysAgo',
   'total30DaysAgo',
   'totalAllTime',
@@ -322,7 +323,7 @@ async function getProtocolDataHandler({
   const response: any = { ...info }
   const records = _records ?? {}
 
-  const summaryKeys = getDimensionMetricKeys(['total24h', 'total48hto24h', 'total7d', 'total30d', 'totalAllTime'], recordType)
+  const summaryKeys = getDimensionMetricKeys(['total24h', 'total48hto24h', 'total7d', 'total30d', 'total1y', 'annualized1y', 'totalAllTime'], recordType)
   summaryKeys.forEach(key => response[key] = summary[key])
 
   const chart = {} as any

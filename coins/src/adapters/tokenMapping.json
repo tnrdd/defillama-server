@@ -572,6 +572,11 @@
     }
   },
   "tron": {
+    "tcfcgjekyqmdyt1yxfum5v5sdtay6tuwik": {
+      "decimals": "6",
+      "symbol": "CNHT",
+      "to": "asset#ethereum:0x6e109e9dd7fa1a58bc3eff667e8e41fc3cc07aef"
+    },
     "tthzxnrlrw2brp9dctqu8i4wd9udcwedz3": {
       "decimals": "18",
       "symbol": "stUSDT",
@@ -1076,6 +1081,11 @@
     }
   },
   "ethereum": {
+    "0xF7D85EC4E7710f71992752eac2111312e73E9C9C": {
+      "decimals": "6",
+      "symbol": "ftUSD",
+      "to": "coingecko#flying-tulip-usd"
+    },
     "0xdA36Ab65d5Af53763CAcD63AE7D441932032326f": {
       "decimals": "18",
       "symbol": "morpho-frxUSD/sUSDS",
@@ -4936,6 +4946,11 @@
     }
   },
   "base": {
+    "0xd993935e13851dd7517af10687ec7e5022127228": {
+      "decimals": "18",
+      "symbol": "apxUSD",
+      "to": "asset#ethereum:0x98a878b1cd98131b271883b390f68d2c90674665"
+    },
     "0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608": {
       "decimals": "18",
       "symbol": "efixDI",
@@ -5609,6 +5624,38 @@
       "to": "coingecko#bitkub-coin",
       "decimals": 18,
       "symbol": "KKUB"
+    }
+  },
+  "arc": {
+    "0x0000000000000000000000000000000000000000": {
+      "decimals": "18",
+      "symbol": "USDC",
+      "to": "coingecko#usd-coin"
+    },
+    "0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1": {
+      "to": "coingecko#euro-coin",
+      "decimals": 6,
+      "symbol": "EURC"
+    },
+    "0xe9185F0c5F296Ed1797AaE4238D26CCaBEadb86C": {
+      "to": "coingecko#hashnote-usyc",
+      "decimals": 6,
+      "symbol": "USYC"
+    },
+    "0x3600000000000000000000000000000000000000": {
+      "decimals": "6",
+      "symbol": "USDC",
+      "to": "coingecko#usd-coin"
+    },
+    "0x128cC466B61f542da60c70e3aA11c10e19B84EDB": {
+      "decimals": "18",
+      "symbol": "WETH",
+      "to": "coingecko#ethereum"
+    },
+    "0x171A4217b86A807A64eB94757Db6849fb4bDbAA0": {
+      "decimals": "8",
+      "symbol": "cirBTC",
+      "to": "coingecko#bitcoin"
     }
   },
   "sanko": {
@@ -12752,6 +12799,11 @@
     }
   },
   "sonic": {
+    "0xF7D85EC4E7710f71992752eac2111312e73E9C9C": {
+      "decimals": "6",
+      "symbol": "ftUSD",
+      "to": "coingecko#flying-tulip-usd"
+    },
     "0x6202B9f02E30E5e1c62Cc01E4305450E5d83b926": {
       "to": "coingecko#staked-stream-usd",
       "decimals": 6,

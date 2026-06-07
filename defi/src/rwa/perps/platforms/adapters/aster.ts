@@ -1,16 +1,17 @@
 import type { PlatformAdapter, FundingEntry, ParsedPerpsMarket } from "../types";
 import { safeFloat, safeFetch, pctChange } from "../types";
+import { hasContractMetadata, getContractMetadataCount } from "../../constants";
 
 // Aster — Binance USD-M-style perp DEX on BNB Chain.
 // Docs: https://docs.asterdex.com/
-// RWA assets are tagged in `underlyingSubType`: STOCK | HK_STOCK | RWA | ETF.
+// Which markets count as RWA is decided by the Airtable sheet, not by Aster's
+// own `underlyingSubType` tags (see fetchAsterRwaSymbols).
 // Margin: USDT/USD1 ($1-pegged) | Funding: 8h cadence.
 
 export const ASTER_MAKER_FEE = 0.0002;
 export const ASTER_TAKER_FEE = 0.0005;
 
 const ASTER_API = "https://fapi.asterdex.com/fapi/v1";
-const RWA_TAGS = new Set(["STOCK", "HK_STOCK", "RWA", "ETF"]);
 
 // ---------------------------------------------------------------------------
 // Raw API types
@@ -67,15 +68,25 @@ interface AsterFundingRate {
 // Fetchers
 // ---------------------------------------------------------------------------
 
-const isRwaSymbol = (s: AsterSymbol): boolean => {
-  if (s.status !== "TRADING") return false;
-  const sub = s.underlyingSubType ?? [];
-  return sub.some((t) => RWA_TAGS.has(t));
-};
+// Canonical contract id for an Aster symbol — the key the Airtable sheet uses.
+// `hasContractMetadata` lowercases internally, but we normalize here too so the
+// id is unambiguous at the call site.
+const asterContractId = (s: AsterSymbol): string => `aster:${s.baseAsset.toLowerCase()}`;
 
+// The RWA Airtable sheet is the single source of truth for which Aster markets
+// are RWA. We keep only symbols that have a metadata row, which (a) matches the
+// downstream gate in perps.ts and (b) avoids pulling per-symbol open interest
+// for the ~400 crypto perps we'd discard anyway. Previously this filtered on
+// Aster's `underlyingSubType` tags, but that allowlist silently dropped whole
+// categories whenever Aster minted a new tag (e.g. "Commodities").
+//
+// Fallback: when no metadata is loaded — i.e. the preview CLI, whose job is to
+// surface new/untagged markets — emit every trading symbol instead.
 async function fetchAsterRwaSymbols(): Promise<AsterSymbol[]> {
   const data = await safeFetch<AsterExchangeInfo>(`${ASTER_API}/exchangeInfo`, "Aster exchangeInfo");
-  return (data?.symbols ?? []).filter(isRwaSymbol);
+  const trading = (data?.symbols ?? []).filter((s) => s.status === "TRADING");
+  if (getContractMetadataCount() === 0) return trading;
+  return trading.filter((s) => hasContractMetadata(asterContractId(s)));
 }
 
 async function fetchAsterTickers(): Promise<Map<string, AsterTicker>> {

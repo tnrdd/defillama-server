@@ -273,6 +273,23 @@ async function nDEPS(timestamp: number = 0) {
   }
   return getWrites({ chain, timestamp, pricesObject, projectName: "other2", });
 }
+async function FPS(timestamp: number = 0) {
+  const chain = "ethereum";
+
+  const api = await getApi(chain, timestamp);
+  // Frankencoin Equity share FPS, and its 1:1 ERC20Wrapper WFPS
+  const fps = "0x1bA26788dfDe592fec8bcB0Eaff472a42BE341B2";
+  const wfps = "0x5052D3Cc819f53116641e89b96Ff4cD1EE80B182";
+  const underlying = "0xB58E61C3098d85632Df34EecfB899A1Ed80921cB"; // ZCHF
+  // Equity.price() returns the price of one FPS denominated in ZCHF, 18 decimals
+  const rawPrice = await api.call({ abi: 'function price() view returns (uint256)', target: fps })
+  const price = rawPrice / 1e18
+  const pricesObject: any = {
+    [fps]: { price, underlying },
+    [wfps]: { price, underlying }, // FPSWrapper is a 1:1 OZ ERC20Wrapper over FPS
+  }
+  return getWrites({ chain, timestamp, pricesObject, projectName: "other2", });
+};
 async function wFalconX(timestamp: number = 0) {
   const chain = "ethereum";
 
@@ -307,7 +324,7 @@ async function prism(timestamp: number = 0) {
 export const adapters = {
   solanaAVS,
   wstBFC, stOAS, wSTBT, beraborrow, feUBTC, cabal, cana, pikeSPA,
-  fusdlp, wJAAA, wUSCC, nDEPS, wFalconX, prism, valantisStexAMMs,
+  fusdlp, wJAAA, wUSCC, nDEPS, FPS, wFalconX, prism, valantisStexAMMs,
   springSUI: async (timestamp: number = 0) => {
     if (timestamp > 0 && Date.now() / 1000 - timestamp > 86400) {
       throw new Error("Timestamp is more than a day old, this adapter does not support historical prices");

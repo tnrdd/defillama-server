@@ -974,6 +974,24 @@ export const configs: { [adapter: string]: Config } = {
     underlying: "0xD48e565561416dE59DA1050ED70b8d75e8eF28f9",
     address: "0xfa9b3b45587f9fcde14759121c3868c2733dcbf4",
   },
+  yzPrime: {
+    rate: async ({ api }) => {
+      const [assets, supply] = await Promise.all([
+        api.call({
+          abi: "uint256:totalAssets",
+          target: "0xc9ea90692757831d98Ac629F2A0140E02b80A7DA",
+        }),
+        api.call({
+          abi: "erc20:totalSupply",
+          target: "0xc9ea90692757831d98Ac629F2A0140E02b80A7DA",
+        }),
+      ]);
+      return assets / supply;
+    },
+    chain: "monad",
+    underlying: "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
+    address: "0xc9ea90692757831d98Ac629F2A0140E02b80A7DA",
+  }
 };
 
 export async function derivs(timestamp: number) {

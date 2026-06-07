@@ -100,6 +100,11 @@ describe('Fees API - Summary Fees', () => {
           expectNonNegativeNumber(data.total1y);
         }
 
+        if (data.annualized1y !== null && data.annualized1y !== undefined) {
+          expectValidNumber(data.annualized1y);
+          expectNonNegativeNumber(data.annualized1y);
+        }
+
         if (data.totalAllTime !== null && data.totalAllTime !== undefined) {
           expectValidNumber(data.totalAllTime);
           expectNonNegativeNumber(data.totalAllTime);

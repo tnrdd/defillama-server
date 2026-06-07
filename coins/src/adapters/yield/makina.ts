@@ -7,6 +7,7 @@ const config: { [chain: string]: string[] } = {
     "DETH": "0x871ab8e36cae9af35c6a3488b049965233deb7ed",
     "DUSD": "0x1e33e98af620f1d563fcd3cfd3c75ace841204ef",
     "usdSHFmk": '0xac499adf00a54044b988a59b19016655c3494b06',
+    "intMkSrRoyUSDC": '0x1004d230aca4b781d0049afd6d0b1ee8ed3a6787',
   }),
 }
 

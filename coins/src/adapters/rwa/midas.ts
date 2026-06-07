@@ -80,11 +80,11 @@ const contracts: Record<string, TokenConfig[]> = {
   //     oracle: "0xB5D6483c556Bc6810b55B983315016Fcb374186D",
   //     denomination: "BTC",
   //   },
-  //   {
-  //     name: "mF-ONE",
-  //     token: "0x238a700eD6165261Cf8b2e544ba797BC11e466Ba",
-  //     oracle: "0xCF4e49f5e750Af8F2f9Aa1642B68E5839D9c1C00",
-  //   },
+    {
+      name: "mF-ONE",
+      token: "0x238a700eD6165261Cf8b2e544ba797BC11e466Ba",
+      oracle: "0xCF4e49f5e750Af8F2f9Aa1642B68E5839D9c1C00",
+    },
   //   {
   //     name: "mAPOLLO",
   //     token: "0x7CF9DEC92ca9FD46f8d86e7798B72624Bc116C05",

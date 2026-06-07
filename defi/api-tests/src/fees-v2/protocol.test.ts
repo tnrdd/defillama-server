@@ -79,13 +79,19 @@ describe('Fees V2 API - Metrics Protocol Overview', () => {
           }
         });
 
-        it('should have total7d and total30d if present', () => {
+        it('should have total7d, total30d and total1y if present', () => {
           const data = responses[protocolSlug].data;
           if (data.total7d !== null && data.total7d !== undefined) {
             expectValidNumber(data.total7d);
           }
           if (data.total30d !== null && data.total30d !== undefined) {
             expectValidNumber(data.total30d);
+          }
+          if (data.total1y !== null && data.total1y !== undefined) {
+            expectValidNumber(data.total1y);
+          }
+          if (data.annualized1y !== null && data.annualized1y !== undefined) {
+            expectValidNumber(data.annualized1y);
           }
         });
 

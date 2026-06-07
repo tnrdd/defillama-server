@@ -345,20 +345,26 @@ async function fillOld(ws: any, protocol: IProtocol, options: any) {
           options.partialRefill = true
           const cacheData = rawRecords[unixTimestamp]
           if (!cacheData) {
-            console.error('No cache data found for timestamp:', unixTimestamp, 'in protocol:', protocol.name, `date: ${new Date(unixTimestamp * 1000).toLocaleDateString()}`);
-            return;
-          }
+            const hasExistingData = !!aggTvlData[unixTimestamp]
+            if (skipMissingChains && !hasExistingData) {
+              options.cacheData = {} // safe to overwrite missing chains as rawRecords and aggTvlData have undefined cache data for the day 
+            } else if (skipMissingChains && hasExistingData) {
+              console.error('Day has existing TVL but cache is missing - refusing to overwrite', unixTimestamp)
+              return
+            } else {
+              console.error('No cache data found for timestamp:', unixTimestamp, 'in protocol:', protocol.name, `date: ${new Date(unixTimestamp * 1000).toLocaleDateString()}`);
+              return
+            }
+          } else {
+            cacheData.preComputedTvlData = {
+              tokenUsdData: tokenUsdRecords[unixTimestamp],
+              tokenSymbolData: tokenSymbolRecords[unixTimestamp],
+              tvlData: aggTvlData[unixTimestamp],
+            }
 
-          cacheData.preComputedTvlData = {
-            tokenUsdData: tokenUsdRecords[unixTimestamp],
-            tokenSymbolData: tokenSymbolRecords[unixTimestamp],
-            tvlData: aggTvlData[unixTimestamp],
+            options.cacheData = cacheData
           }
-
-          options.cacheData = cacheData
         }
-
-
 
         const response: any = await storeTvl2(options)
         const id = `${protocol.id}-${response.unixTimestamp}`

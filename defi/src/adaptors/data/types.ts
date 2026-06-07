@@ -312,6 +312,7 @@ export type ProtocolSummary = RecordSummary & {
     change_7dover7d?: number
     average1y?: number
     monthlyAverage1y?: number
+    annualized1y?: number | null
     totalAllTime?: number
     breakdown24h?: any
     breakdown30d?: any

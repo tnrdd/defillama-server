@@ -1645,7 +1645,8 @@ const data4: Protocol[] = [
     twitter: "OoiaTon",
     dimensions: {
       aggregators: "ooia"
-    }
+    },
+    deadUrl: true,
   },
   /*{
     id: "5631",
@@ -2032,6 +2033,7 @@ const data4: Protocol[] = [
       "https://storage.googleapis.com/ktx-data/data/Verichains%20Public%20Report%20-%20Sailor%20Finance.pdf",
     ],
     listedAt: 1737379699,
+    deadUrl: true,
     dimensions: {
       fees: "sailor-finance",
       dexs: "sailor-finance"
@@ -4167,8 +4169,8 @@ const data4: Protocol[] = [
   {
     id: "5743",
     name: "Kodiak V2",
-    address: null,
-    symbol: "-",
+    address: "berachain:0xc0d1ac00a30fa4e30e44afc7313d6312c87e21df",
+    symbol: "KDK",
     url: "https://app.kodiak.finance",
     description: "Uniswap V2 fork on Berachain",
     chain: "Berachain",
@@ -4192,8 +4194,8 @@ const data4: Protocol[] = [
   {
     id: "5744",
     name: "Kodiak V3",
-    address: null,
-    symbol: "-",
+    address: "berachain:0xc0d1ac00a30fa4e30e44afc7313d6312c87e21df",
+    symbol: "KDK",
     url: "https://app.kodiak.finance",
     description: "Uniswap V3 fork on Berachain",
     chain: "Berachain",
@@ -11086,8 +11088,8 @@ const data4: Protocol[] = [
     id: "6042",
     name: "Lighter Bridge",
     previousNames: ["Lighter V2"],
-    address: null,
-    symbol: "-",
+    address: "ethereum:0x232ce3bd40fcd6f80f3d55a522d03f25df784ee2",
+    symbol: "LIT",
     url: "https://app.lighter.xyz/trade/ETH?referral=FHT1N8AYKHP4",
     referralUrl: "https://app.lighter.xyz/trade/ETH?referral=FHT1N8AYKHP4",
     description:
@@ -14426,6 +14428,7 @@ const data4: Protocol[] = [
         adapter: "usdai",
         genuineSpikes: [
           ["2026-04-28", "PYUSD yields harvested"], //https://arbiscan.io/tx/0xcb01527d233d11bfe52ce21c7e3aec5d875829421962966a45fb91946233a1c6
+          ["2026-06-04", "$3M origination fee from Duos Edge AI's debt financing"], //https://x.com/USDai_Official/status/2062668807735578682 https://arbiscan.io/tx/0x7891318e2e804cd7912842db341e23363b69a3bdbf4a6462625a1aba7cfbd6be
         ]
       },
     }
@@ -16573,6 +16576,7 @@ const data4: Protocol[] = [
     module: "luckystake/index.js",
     twitter: "LuckyStakeApp",
     listedAt: 1749156591,
+    deadUrl: true,
   },
   {
     id: "6275",
@@ -17935,7 +17939,7 @@ const data4: Protocol[] = [
     symbol: "-",
     url: "https://kgen.io/",
     description:
-      "VeriFi: The Proof of Human model scaling partners with verified users.",
+      "The proof of human model providing verified human infrastructure to the world's leading AI systems.",
     chain: "Aptos",
     logo: `${baseIconsUrl}/kgen.jpg`,
     audits: "0",
@@ -18395,6 +18399,7 @@ const data4: Protocol[] = [
     module: "tapp-exchange/index.js",
     twitter: "TappExchange",
     listedAt: 1750885257,
+    deadUrl: true,
     dimensions: {
       fees: "tapp-exchange",
       dexs: "tapp-exchange"
@@ -20147,7 +20152,7 @@ const data4: Protocol[] = [
   {
     id: "6430",
     name: "Blackhole AMM",
-    address: null,
+    address: "avax:0xcd94a87696fac69edae3a70fe5725307ae1c43f6",
     symbol: "BLACK",
     url: "https://blackhole.xyz/",
     description: "Blackhole is a next-generation decentralized exchange (DEX) built on the Avalanche blockchain.",
@@ -20171,7 +20176,7 @@ const data4: Protocol[] = [
   {
     id: "6431",
     name: "Blackhole CLMM",
-    address: null,
+    address: "avax:0xcd94a87696fac69edae3a70fe5725307ae1c43f6",
     symbol: "BLACK",
     url: "https://blackhole.xyz/",
     description: "Blackhole is a next-generation decentralized exchange (DEX) built on the Avalanche blockchain.",
@@ -21795,8 +21800,8 @@ const data4: Protocol[] = [
   {
     id: "6501",
     name: "Etherex Legacy",
-    address: null,
-    symbol: "-",
+    address: "linea:0xefd81eec32b9a8222d1842ec3d99c7532c31e348",
+    symbol: "REX",
     url: "https://etherex.finance/",
     description:
       "Etherex is a concentrated liquidity layer and exchange built on the Linea network, powered by the latest metaDEX x(3,3) methodology—a more fluid and accessible version of the popular ve(3,3) model",
@@ -21821,8 +21826,8 @@ const data4: Protocol[] = [
   {
     id: "6502",
     name: "Etherex CL",
-    address: null,
-    symbol: "-",
+    address: "linea:0xefd81eec32b9a8222d1842ec3d99c7532c31e348",
+    symbol: "REX",
     url: "https://etherex.finance/",
     description:
       "Etherex is a concentrated liquidity layer and exchange built on the Linea network, powered by the latest metaDEX x(3,3) methodology—a more fluid and accessible version of the popular ve(3,3) model",
@@ -25172,6 +25177,7 @@ const data4: Protocol[] = [
     module: "dummy.js",
     twitter: "standarddotim",
     parentProtocol: "parent#standard-protocol",
+    deadUrl: true,
     dimensions: {
       fees: "standard-spot",
       dexs: "standard-spot"
@@ -25946,6 +25952,7 @@ const data4: Protocol[] = [
     twitter: "standarddotim",
     audit_links: ["https://github.com/standarddotim/standard3.0-contracts/tree/main/audits"],
     parentProtocol: "parent#standard-protocol",
+    deadUrl: true,
     listedAt: 1757349881,
   },
   {
@@ -27382,8 +27389,8 @@ const data4: Protocol[] = [
   {
     id: "6751",
     name: "Lighter Perps",
-    address: null,
-    symbol: "-",
+    address: "ethereum:0x232ce3bd40fcd6f80f3d55a522d03f25df784ee2",
+    symbol: "LIT",
     url: "https://app.lighter.xyz/trade/ETH?referral=FHT1N8AYKHP4",
     referralUrl: "https://app.lighter.xyz/trade/ETH?referral=FHT1N8AYKHP4",
     description:
@@ -30181,7 +30188,7 @@ const data4: Protocol[] = [
   {
     id: "6877",
     name: "ZealousSwap",
-    address: null,
+    address: "kasplex:ZEAL",
     symbol: "ZEAL",
     url: "https://app.zealousswap.com/swap",
     description: `The first AMM-based DEX on the Kaspa ecosystem`,

@@ -300,6 +300,16 @@ describe('Perps API - Summary', () => {
             expectValidNumber(data.total30d);
             expectNonNegativeNumber(data.total30d);
           }
+
+          if (data.total1y !== null && data.total1y !== undefined) {
+            expectValidNumber(data.total1y);
+            expectNonNegativeNumber(data.total1y);
+          }
+
+          if (data.annualized1y !== null && data.annualized1y !== undefined) {
+            expectValidNumber(data.annualized1y);
+            expectNonNegativeNumber(data.annualized1y);
+          }
         });
 
         it('should have valid change percentage when present', () => {
@@ -342,6 +352,7 @@ describe('Perps API - Summary', () => {
           expectChainBreakdownTotalsToMatch(data, 'total48hto24h');
           expectChainBreakdownTotalsToMatch(data, 'total7d');
           expectChainBreakdownTotalsToMatch(data, 'total30d');
+          expectChainBreakdownTotalsToMatch(data, 'total1y');
           expectChainBreakdownTotalsToMatch(data, 'totalAllTime');
         });
       });
@@ -410,7 +421,7 @@ describe('Perps API - Summary', () => {
 
 function expectChainBreakdownTotalsToMatch(
   data: PerpsSummaryResponse,
-  key: 'total24h' | 'total48hto24h' | 'total7d' | 'total30d' | 'totalAllTime'
+  key: 'total24h' | 'total48hto24h' | 'total7d' | 'total30d' | 'total1y' | 'totalAllTime'
 ) {
   if (!data.chainBreakdown) return;
 

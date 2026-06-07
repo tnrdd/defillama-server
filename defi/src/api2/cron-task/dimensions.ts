@@ -9,7 +9,7 @@ import { protocolsById } from "../../protocols/data";
 import { parentProtocolsById } from "../../protocols/parentProtocols";
 import { addAggregateRecords, getDimensionsCacheV2, storeDimensionsCacheV2, storeDimensionsMetadata, transformDimensionRecord, validateAggregateRecords, } from "../utils/dimensionsUtils";
 import { storeEmissionsCache, } from "../utils/emissionsUtils";
-import { getNextTimeS, getTimeSDaysAgo, getUnixTimeNow, timeSToUnix, unixTimeToTimeS } from "../utils/time";
+import { getNextTimeS, getTimeSDaysAgo, getUnixTimeNow, timeSToUnix } from "../utils/time";
 
 import { runWithRuntimeLogging, cronNotifyOnDiscord, tableToString } from "../utils";
 import * as sdk from '@defillama/sdk'
@@ -559,6 +559,24 @@ ${tableToString(invalidFinancialStatementRecords, ['protocol', 'timeframe', 'key
             summary.monthlyAverage1y = (summary.total1y / _protocolData.lastOneYearData.length) * 30.44
           }
         });
+        // annualized1y: a separate "annualized" basis that does NOT touch total1y (which stays the
+        // observed trailing-twelve-month sum). >=1y of data -> actual TTM; <1y of data -> annualize
+        // the available history to a 12-month run-rate (totalAllTime/coveredDays*365); null when it
+        // can't be computed, so consumers can fall back to total30d * 12.2. coveredDays spans the
+        // protocol's first to last finalized daily record (the in-progress current UTC day is
+        // excluded from these sums by design).
+        {
+          const coveredDays = getCoveredDays(Object.keys(protocol.records))
+          const setAnnualized1y = (summary: any) => {
+            summary.annualized1y = computeAnnualizedTotal1y({ coveredDays, total1y: summary.total1y, totalAllTime: summary.totalAllTime })
+          }
+          setAnnualized1y(protocolSummary)
+          // Only set per-chain annualized1y when chain summaries are actually maintained. For parent
+          // protocols (skipChainSummary) the chainSummary only carries a partial totalAllTime, so a
+          // chain run-rate computed over the parent's full coveredDays would be misleading.
+          if (!skipChainSummary)
+            Object.values(protocolSummary.chainSummary ?? {}).forEach((chainSummary: any) => setAnnualized1y(chainSummary))
+        }
         // change_1d
         protocolSummaryAction(protocolSummary, (summary: any) => {
           if (typeof summary.total24h === 'number' && typeof summary.total48hto24h === 'number' && summary.total48hto24h !== 0)
@@ -1010,4 +1028,35 @@ function getSurroundingKeysExcludingCurrent<T>(array: T[], currentIndex: number,
 
 function getNonNegativeValue(value: number) {
   return value > 0 ? value : 0
+}
+
+// Number of days spanned by a set of daily-record timeS keys, first to last (inclusive).
+// This is the coverage window used to decide whether total1y is a full trailing-twelve-month
+// figure or only a partial history that needs to be annualized to a run-rate.
+export function getCoveredDays(recordTimeKeys: string[]): number {
+  if (!recordTimeKeys.length) return 0
+  const unixDays = recordTimeKeys.map(timeSToUnix).sort((a, b) => a - b)
+  return Math.round((unixDays[unixDays.length - 1] - unixDays[0]) / 86400) + 1
+}
+
+// Annualized basis used to overload total1y:
+//   - >=1y of data  -> actual trailing-twelve-month total (TTM)
+//   - <1y of data   -> annualize the available history to a 12-month run-rate
+//                       (totalAllTime / coveredDays * 365)
+//   - otherwise      -> null, so callers fall back to total30d * 12.2
+export function computeAnnualizedTotal1y({ coveredDays, total1y, totalAllTime }: {
+  coveredDays: number,
+  total1y?: number | null,
+  totalAllTime?: number | null,
+}): number | null {
+  if (!Number.isFinite(coveredDays) || coveredDays <= 0) return null
+
+  let annualized: number | null = null
+  if (coveredDays >= 365 && total1y != null) {
+    annualized = total1y                              // TTM (actual)
+  } else if (totalAllTime != null) {
+    annualized = (totalAllTime / coveredDays) * 365   // run-rate
+  }
+
+  return Number.isFinite(annualized as number) ? annualized : null
 }
