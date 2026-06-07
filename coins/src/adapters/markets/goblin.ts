@@ -14,19 +14,19 @@ export async function goblin(timestamp: number = 0) {
     throw new Error("Goblin adapter only supports timestamp = 0");
 
   const {
-    data: {
-      data: { vault },
-    },
-  } = await axios.post("https://api.hyperion.xyz/v1/graphql", {
-    query: `query fetchAllVaultQuery {
-            vault { tokenA  tokenB  vaultId  vaultName }  
-        }`,
-  });
+    data: { items: vault },
+  } = await axios.get(
+    "https://api.hyperion.xyz/base/data/vaults?includeBeta=true"
+  );
 
-  const underlyingAssets: string[] = [];
-  vault.map((v: any) => {
-    underlyingAssets.push(v.tokenA, v.tokenB);
-  });
+  if (!Array.isArray(vault)) {
+    throw new Error("Goblin adapter: unexpected vaults response shape");
+  }
+
+  const underlyingAssets: string[] = vault.flatMap((v: any) => [
+    v.tokenA,
+    v.tokenB,
+  ]);
 
   const underlyingTokenData = await getTokenAndRedirectDataMap(
     underlyingAssets,

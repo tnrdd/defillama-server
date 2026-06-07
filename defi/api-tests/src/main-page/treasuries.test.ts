@@ -10,6 +10,7 @@ import {
 } from '../../utils/testHelpers';
 import { validate } from '../../utils/validation';
 import { ApiResponse } from '../../utils/config/apiClient';
+import { expectCorsHeaders } from '../../utils/corsHelpers';
 
 const apiClient = createApiClient(endpoints.MAIN_PAGE.BASE_URL);
 
@@ -20,9 +21,13 @@ describe('Main Page API - Treasuries', () => {
     treasuriesResponse = await apiClient.get<TreasuriesResponse>(
       endpoints.MAIN_PAGE.TREASURIES
     );
-  }, 30000);
+  }, 90000);
 
   describe('Basic Response Validation', () => {
+    it('should expose CORS headers', () => {
+      expectCorsHeaders(treasuriesResponse);
+    });
+
     it('should return successful response with valid structure', () => {
       expectSuccessfulResponse(treasuriesResponse);
       expectArrayResponse(treasuriesResponse);

@@ -11,7 +11,7 @@ import { dimensionFormChoices, removeWaitingRecords, runDimensionsRefill, sendWa
 import { runMiscCommand } from './misc';
 import { apiTestFormChoices, runApiTests, stopApiTests } from './api-tests';
 import { runSpikesCommand } from './spikes';
-import { runTvlAction, tvlProtocolList, tvlStoreAllWaitingRecords, removeTvlStoreWaitingRecords, sendTvlStoreWaitingRecords, sendTvlDeleteWaitingRecords, tvlDeleteClearList, tvlDeleteSelectedRecords, tvlDeleteAllRecords, } from './tvl'
+import { runTvlAction, tvlProtocolList, tvlProtocolRefillability, tvlStoreAllWaitingRecords, removeTvlStoreWaitingRecords, sendTvlStoreWaitingRecords, sendTvlDeleteWaitingRecords, tvlDeleteClearList, tvlDeleteSelectedRecords, tvlDeleteAllRecords, } from './tvl'
 
 import { setConfig } from './utils/config';
 import getTvlCacheEnv from '../../src/api2/env';
@@ -150,7 +150,7 @@ async function start() {
 
     ws.send(JSON.stringify({
       type: 'init',
-      data: { dimensionFormChoices, tvlProtocolList, apiTestFormChoices }
+      data: { dimensionFormChoices, tvlProtocolList, tvlProtocolRefillability, apiTestFormChoices }
     }));
     sendWaitingRecords(ws);
     sendTvlStoreWaitingRecords(ws);

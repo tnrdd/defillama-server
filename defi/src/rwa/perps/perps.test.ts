@@ -20,6 +20,7 @@ import {
   normalizePerpsMetadataInPlace,
   PERPS_ALWAYS_STRING_ARRAY_FIELDS,
   PERPS_STRING_OR_NULL_FIELDS,
+  resolveContractKey,
   resetContractMetadataStore,
   setContractMetadata,
   type PerpsContractMetadata,
@@ -44,6 +45,15 @@ import {
   type MetaAndAssetCtxsResponse,
   type FundingHistoryEntry,
 } from "./platforms/adapters/hyperliquid";
+import { parseApexMarkets, type ApexContract, type ApexTicker, type ApexUiTicker } from "./platforms/adapters/apex";
+import { isGtradeRwaGroupName, toGtradePythPairKey } from "./platforms/adapters/gtrade";
+import {
+  parseVariationalMarkets,
+  VARIATIONAL_MAX_LEVERAGE,
+  VARIATIONAL_MAKER_FEE,
+  VARIATIONAL_TAKER_FEE,
+  type VariationalListing,
+} from "./platforms/adapters/variational";
 import { getCsvData } from "../spreadsheet";
 
 // ── utils.ts ──────────────────────────────────────────────────────────────────
@@ -112,6 +122,26 @@ describe("computeProtocolFees", () => {
   });
 });
 
+describe("gTrade adapter helpers", () => {
+  it("treats gTrade forex groups as RWA perps groups", () => {
+    expect(isGtradeRwaGroupName("stocks-1")).toBe(true);
+    expect(isGtradeRwaGroupName("indices")).toBe(true);
+    expect(isGtradeRwaGroupName("commodities-2")).toBe(true);
+    expect(isGtradeRwaGroupName("forex")).toBe(true);
+    expect(isGtradeRwaGroupName("forex-minor")).toBe(true);
+    expect(isGtradeRwaGroupName("forex-exotic")).toBe(true);
+    expect(isGtradeRwaGroupName("crypto")).toBe(false);
+    expect(isGtradeRwaGroupName("altcoins")).toBe(false);
+  });
+
+  it("builds exact Pyth pair keys from gTrade contracts", () => {
+    expect(toGtradePythPairKey("gtrade:USD-JPY")).toEqual({ base: "USD", quote: "JPY", key: "USD/JPY" });
+    expect(toGtradePythPairKey("gtrade:GOOGL_1-USD")).toEqual({ base: "GOOGL", quote: "USD", key: "GOOGL/USD" });
+    expect(toGtradePythPairKey("gtrade:FB-USD")).toEqual({ base: "META", quote: "USD", key: "META/USD" });
+    expect(toGtradePythPairKey("bad-contract")).toBeNull();
+  });
+});
+
 describe("groupBy", () => {
   it("groups items by key function", () => {
     const items = [
@@ -168,6 +198,28 @@ describe("market metadata store", () => {
   it("returns null for unknown contract", () => {
     expect(getContractMetadata("DOESNOTEXIST")).toBeNull();
     expect(hasContractMetadata("DOESNOTEXIST")).toBe(false);
+  });
+
+  it("resolves live gTrade pair IDs to Airtable canonical IDs", () => {
+    setContractMetadata("gtrade:USDMXN", meta);
+    setContractMetadata("gtrade:JPY", meta);
+    setContractMetadata("gtrade:AMZN-USD", meta);
+    setContractMetadata("gtrade:GOOGL", meta);
+
+    expect(resolveContractKey("gtrade:USD-MXN")).toBe("gtrade:usdmxn");
+    expect(resolveContractKey("gtrade:USD-JPY")).toBe("gtrade:jpy");
+    expect(resolveContractKey("gtrade:AMZN-USD")).toBe("gtrade:amzn-usd");
+    expect(resolveContractKey("gtrade:GOOGL-USD")).toBe("gtrade:googl");
+    expect(resolveContractKey("gtrade:AMZN_1-USD")).toBeUndefined();
+  });
+
+  it("does not resolve ambiguous generated aliases", () => {
+    setContractMetadata("cash:HOOD-USDT", meta);
+    setContractMetadata("cash:HOOD-USDC", meta);
+
+    expect(resolveContractKey("cash:HOOD")).toBeUndefined();
+    expect(resolveContractKey("cash:HOOD-USDT")).toBe("cash:hood-usdt");
+    expect(resolveContractKey("cash:HOOD-USDC")).toBe("cash:hood-usdc");
   });
 });
 
@@ -416,6 +468,180 @@ describe("parseFundingHistory", () => {
 
   it("returns empty array for empty input", () => {
     expect(parseFundingHistory([], "v", 100)).toEqual([]);
+  });
+});
+
+// ── apex.ts parsers ──────────────────────────────────────────────────────────
+
+describe("parseApexMarkets", () => {
+  const contracts: ApexContract[] = [
+    {
+      baseTokenId: "USO",
+      category: "COMMODITY",
+      contractType: "STOCK_CONTRACT",
+      displayMaxLeverage: "50",
+      enableDisplay: true,
+      enableOpenPosition: true,
+      enableTrade: true,
+      settleAssetId: "USDT",
+      stepSize: "0.01",
+      symbol: "USO-USDT",
+      symbolDisplayName: "USOUSDT",
+      tokenName: "United States Oil Fund",
+    },
+    {
+      baseTokenId: "AAPL",
+      category: "STOCK",
+      contractType: "STOCK_CONTRACT",
+      displayMaxLeverage: "50",
+      enableDisplay: true,
+      enableOpenPosition: false,
+      enableTrade: true,
+      settleAssetId: "USDT",
+      stepSize: "0.01",
+      symbol: "AAPL-USDT",
+      symbolDisplayName: "AAPLUSDT",
+    },
+    {
+      baseTokenId: "BTC",
+      category: "L1",
+      contractType: "UNKNOWN_CONTRACT_TYPE",
+      displayMaxLeverage: "100",
+      enableDisplay: true,
+      enableOpenPosition: true,
+      enableTrade: true,
+      settleAssetId: "USDT",
+      stepSize: "0.001",
+      symbol: "BTC-USDT",
+      symbolDisplayName: "BTCUSDT",
+    },
+  ];
+
+  const tickers: ApexTicker[] = [
+    {
+      ticker_id: "USOUSDT",
+      funding_rate: "0.0000125",
+      open_interest: "323.64",
+      open_interest_usd: "48371.2344",
+      index_price: "149.46",
+      last_price: "149.27",
+      usd_volume: "220646.3854",
+      maker_fee: 0.0002,
+      taker_fee: 0.0005,
+      bid: "149.27",
+      ask: "149.52",
+    },
+    {
+      ticker_id: "AAPLUSDT",
+      open_interest_usd: "1",
+      index_price: "200",
+      last_price: "200",
+      usd_volume: "1",
+    },
+    {
+      ticker_id: "BTCUSDT",
+      open_interest_usd: "100",
+      index_price: "100000",
+      last_price: "100000",
+      usd_volume: "100",
+    },
+  ];
+
+  const uiTickers: ApexUiTicker[] = [
+    {
+      symbol: "USOUSDT",
+      fundingRate: "0.0000125",
+      indexPrice: "149.50",
+      lastPrice: "149.80",
+      markPrice: "149.48",
+      openInterest: "323.64",
+      price24hPcnt: "0.0125",
+      turnover24h: "221000.12",
+      volume24h: "1476.2",
+    },
+  ];
+
+  it("filters enabled Apex stock-contract RWA categories", () => {
+    const parsed = parseApexMarkets(contracts, tickers);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].contract).toBe("apex:USO");
+    expect(parsed[0].venue).toBe("apex");
+    expect(parsed[0].platform).toBe("apex");
+  });
+
+  it("maps ticker and symbol config fields", () => {
+    const [uso] = parseApexMarkets(contracts, tickers, uiTickers);
+    expect(uso.openInterest).toBe(48371.2344);
+    expect(uso.volume24h).toBe(221000.12);
+    expect(uso.markPx).toBe(149.48);
+    expect(uso.oraclePx).toBe(149.5);
+    expect(uso.midPx).toBeCloseTo((149.27 + 149.52) / 2);
+    expect(uso.fundingRate).toBe(0.0000125);
+    expect(uso.prevDayPx).toBeCloseTo(149.8 / 1.0125);
+    expect(uso.priceChange24h).toBe(1.25);
+    expect(uso.premium).toBeCloseTo((149.48 - 149.5) / 149.5);
+    expect(uso.maxLeverage).toBe(50);
+    expect(uso.szDecimals).toBe(2);
+    expect(uso.makerFeeRate).toBe(0.0002);
+    expect(uso.takerFeeRate).toBe(0.0005);
+  });
+
+  it("skips enabled contracts when no matching ticker is present", () => {
+    expect(parseApexMarkets([contracts[0]], [])).toEqual([]);
+  });
+});
+
+// ── variational.ts parsers ───────────────────────────────────────────────────
+
+describe("parseVariationalMarkets", () => {
+  const listings: VariationalListing[] = [
+    {
+      ticker: "XAU",
+      name: "Gold",
+      mark_price: "4497.97",
+      volume_24h: "23277904.91",
+      open_interest: {
+        long_open_interest: "3000000.5",
+        short_open_interest: "2693491.25",
+      },
+      funding_rate: "0.084694",
+      funding_interval_s: 14400,
+      base_spread_bps: "6.43",
+      quotes: {
+        base: { bid: "4497.50", ask: "4498.50" },
+      },
+    },
+    {
+      ticker: "BTC",
+      name: "Bitcoin",
+      mark_price: "77308.63",
+      volume_24h: "318320282.07",
+      open_interest: {
+        long_open_interest: "100",
+        short_open_interest: "200",
+      },
+    },
+  ];
+
+  it("keeps only Variational RWA tickers", () => {
+    const parsed = parseVariationalMarkets(listings);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].contract).toBe("variational:XAU");
+    expect(parsed[0].venue).toBe("variational");
+    expect(parsed[0].platform).toBe("variational");
+  });
+
+  it("maps notional market fields from the stats listing", () => {
+    const [xau] = parseVariationalMarkets(listings);
+    expect(xau.openInterest).toBe(11386983.5);
+    expect(xau.volume24h).toBe(23277904.91);
+    expect(xau.markPx).toBe(4497.97);
+    expect(xau.oraclePx).toBe(0);
+    expect(xau.midPx).toBe(4498);
+    expect(xau.fundingRate).toBeCloseTo(0.084694 / 2190);
+    expect(xau.maxLeverage).toBe(VARIATIONAL_MAX_LEVERAGE);
+    expect(xau.makerFeeRate).toBe(VARIATIONAL_MAKER_FEE);
+    expect(xau.takerFeeRate).toBe(VARIATIONAL_TAKER_FEE);
   });
 });
 
@@ -685,6 +911,86 @@ describe("buildOverviewBreakdownCharts", () => {
     ]);
     expect(result["overview-breakdown/excludeassetclass/single-stock-synthetic-perp/openinterest/assetgroup.json"]).toEqual([
       { timestamp: 200, Commodities: 7, Unknown: 5 },
+    ]);
+  });
+
+  it("drops historical rows without metadata while preserving real Unknown asset-group buckets", () => {
+    const result = buildOverviewBreakdownCharts(
+      [
+        { id: "cash:hood", timestamp: 100, open_interest: "10", volume_24h: "3" },
+        { id: "xyz:meta", timestamp: 100, open_interest: "5", volume_24h: "2" },
+        { id: "legacy:unmapped", timestamp: 100, open_interest: "99", volume_24h: "88" },
+      ],
+      [
+        {
+          id: "cash:hood-usdt",
+          data: {
+            contract: "cash:HOOD-USDT",
+            venue: "cash",
+            referenceAsset: "Robinhood",
+            referenceAssetGroup: "Public Equities",
+            assetClass: ["Stock Perp"],
+          },
+        },
+        {
+          id: "xyz:meta",
+          data: {
+            contract: "xyz:META",
+            venue: "xyz",
+            referenceAsset: "Meta",
+            assetClass: ["Stock Perp"],
+          },
+        },
+      ]
+    );
+
+    expect(result["overview-breakdown/all/openinterest/assetgroup.json"]).toEqual([
+      { timestamp: 100, "Public Equities": 10, Unknown: 5 },
+    ]);
+    expect(result["overview-breakdown/all/openinterest/venue.json"]).toEqual([
+      { timestamp: 100, cash: 10, xyz: 5 },
+    ]);
+    expect(result["overview-breakdown/assetgroup/public-equities/openinterest/baseasset.json"]).toEqual([
+      { timestamp: 100, Robinhood: 10 },
+    ]);
+    expect(result["overview-breakdown/assetgroup/unknown/openinterest/baseasset.json"]).toEqual([
+      { timestamp: 100, Meta: 5 },
+    ]);
+  });
+
+  it("does not resolve stripped stable-quote aliases when multiple metadata rows collide", () => {
+    const result = buildOverviewBreakdownCharts(
+      [
+        { id: "cash:hood", timestamp: 100, open_interest: "10", volume_24h: "3" },
+        { id: "cash:hood-usdt", timestamp: 100, open_interest: "7", volume_24h: "2" },
+      ],
+      [
+        {
+          id: "cash:hood-usdt",
+          data: {
+            contract: "cash:HOOD-USDT",
+            venue: "cash",
+            referenceAsset: "Robinhood USDT",
+            referenceAssetGroup: "Public Equities",
+            assetClass: ["Stock Perp"],
+          },
+        },
+        {
+          id: "cash:hood-usdc",
+          data: {
+            contract: "cash:HOOD-USDC",
+            venue: "cash",
+            referenceAsset: "Robinhood USDC",
+            referenceAssetGroup: "Public Equities",
+            assetClass: ["Stock Perp"],
+          },
+        },
+      ]
+    );
+
+    expect(result["overview-breakdown/all/openinterest/venue.json"]).toEqual([{ timestamp: 100, cash: 7 }]);
+    expect(result["overview-breakdown/all/openinterest/baseasset.json"]).toEqual([
+      { timestamp: 100, "Robinhood USDT": 7 },
     ]);
   });
 

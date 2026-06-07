@@ -11,9 +11,10 @@ import {
 } from '../../utils/testHelpers';
 import { validate } from '../../utils/validation';
 import { ApiResponse } from '../../utils/config/apiClient';
+import { expectCorsHeaders } from '../../utils/corsHelpers';
 
-const apiClient = createApiClient(endpoints.TVL.BASE_URL);
-const TVL_ENDPOINTS = endpoints.TVL;
+const apiClient = createApiClient(endpoints.TVL_PRO.BASE_URL);
+const TVL_ENDPOINTS = endpoints.TVL_PRO;
 
 describe('TVL API - Chain Assets', () => {
   let chainAssetsResponse: ApiResponse<ChainAssets>;
@@ -26,6 +27,10 @@ describe('TVL API - Chain Assets', () => {
   });
 
   describe('Basic Response Validation', () => {
+    it('should expose CORS headers', () => {
+      expectCorsHeaders(chainAssetsResponse);
+    });
+
     it('should return successful response with valid structure', () => {
       expectSuccessfulResponse(chainAssetsResponse);
       expectObjectResponse(chainAssetsResponse);

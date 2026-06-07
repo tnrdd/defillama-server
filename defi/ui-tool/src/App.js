@@ -11,6 +11,7 @@ import {
   Tag,
   Space,
   Collapse,
+  Alert,
 } from 'antd';
 import { PlayCircleOutlined, ClearOutlined, MoonOutlined, SaveOutlined, LineChartOutlined, DeleteOutlined, ApiOutlined, LockOutlined, EyeInvisibleOutlined, EyeOutlined, ExclamationCircleOutlined, CheckOutlined, CloseOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -39,6 +40,7 @@ const App = () => {
       adapterTypeChoices: { fees: [] },
     },
     tvlProtocolList: [],
+    tvlProtocolRefillability: null,
     apiTestFormChoices: {
       categories: ['all', 'tvl', 'fees', 'stablecoins', 'yields', 'volumes', 'bridges'],
       testFilesByCategory: {},
@@ -51,6 +53,7 @@ const App = () => {
   const [dimensionRefillForm] = Form.useForm();
   const dimRefillOnlyMissing = Form.useWatch('onlyMissing', dimensionRefillForm);
   const dimRefillDelayEnabled = Form.useWatch('delayEnabled', dimensionRefillForm);
+  const dimRefillLoadFromCsv = Form.useWatch('loadFromCsv', dimensionRefillForm);
 
   const [adapterTypes, setAdapterTypes] = useState([]);
   const [dimensionRefillProtocols, setDimensionRefillProtocols] = useState([]);
@@ -110,6 +113,13 @@ const App = () => {
   const [spikesMinChangeValue, setSpikesMinChangeValue] = useState(0);
   const [spikesMinChangePct, setSpikesMinChangePct] = useState(0);
   const [spikesDateRange, setSpikesDateRange] = useState(null);
+  const [spikesExcludedCategories, setSpikesExcludedCategories] = useState([])
+  const [spikesShowNonRefillable, setSpikesShowNonRefillable] = useState(false);
+  const [spikesTableState, setSpikesTableState] = useState({
+    pagination: { current: 1, pageSize: 100 },
+    filters: {},
+    sorter: { columnKey: 'start', order: 'descend' },
+  });
   const [tvlSubTab, setTvlSubTab] = useState('refill');
 
   function addWebSocketConnection() {
@@ -456,18 +466,22 @@ const App = () => {
         return;
       }
 
+      const loadFromCsv = values.loadFromCsv || false;
       const payload = {
         type: 'dimensions-refill-runCommand',
         data: {
           adapterType: values.adapterType,
           protocol: values.protocol,
-          dateFrom: Math.floor(values.dateRange[0].valueOf() / 1000),
-          dateTo: Math.floor(values.dateRange[1].valueOf() / 1000),
+          // date range is not needed in CSV mode - dates come from the CSV itself
+          dateFrom: loadFromCsv || !values.dateRange ? undefined : Math.floor(values.dateRange[0].valueOf() / 1000),
+          dateTo: loadFromCsv || !values.dateRange ? undefined : Math.floor(values.dateRange[1].valueOf() / 1000),
           onlyMissing: values.onlyMissing || false,
           parallelCount: values.parallelCount,
           delayBetweenRuns: values.delayEnabled ? values.delayBetweenRuns ?? 0 : 0,
           skipHourlyCache: values.skipHourlyCache || false,
           parallelHourlyProcessCount: values.parallelHourlyProcessCount || 1,
+          loadFromCsv,
+          csvText: loadFromCsv ? values.csvText : undefined,
           // dryRun: values.dryRun || false,
           // checkBeforeInsert: values.checkBeforeInsert || false,
           dryRun: false,
@@ -557,11 +571,11 @@ const App = () => {
         <Form.Item
           label="Date Range"
           name="dateRange"
-          style={{ display: (dimRefillOnlyMissing && !dimDeleteAction) ? 'none' : 'block' }}
+          style={{ display: ((dimRefillOnlyMissing || dimRefillLoadFromCsv) && !dimDeleteAction) ? 'none' : 'block' }}
           rules={[
             ({ getFieldValue }) => ({
               validator(_, value) {
-                if (getFieldValue('onlyMissing') || (value && value.length === 2)) {
+                if (getFieldValue('onlyMissing') || getFieldValue('loadFromCsv') || (value && value.length === 2)) {
                   return Promise.resolve();
                 }
                 return Promise.reject(new Error('Please select a valid date range'));
@@ -573,6 +587,69 @@ const App = () => {
         </Form.Item>
 
         {!dimDeleteAction && <>
+        <Form.Item
+          label="Load from CSV"
+          name="loadFromCsv"
+          valuePropName="checked"
+          help="Build records from a pasted CSV instead of running the adapter's fetch functions"
+        >
+          <Switch checkedChildren="CSV" unCheckedChildren="Fetch" />
+        </Form.Item>
+
+        <Form.Item
+          label="CSV Data"
+          name="csvText"
+          style={{ display: dimRefillLoadFromCsv ? 'block' : 'none' }}
+          help="Columns: a date column (date/timestamp/day) + dimension columns (long e.g. dailyVolume, or short e.g. dv). Optional 'chain' column - multiple rows per date are aggregated per chain. No chain column => protocol's first chain."
+          rules={[
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!getFieldValue('loadFromCsv') || (value && value.trim().length)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('Please paste CSV data'));
+              },
+            }),
+          ]}
+        >
+          <Input.TextArea
+            rows={8}
+            placeholder={'date,chain,dailyVolume,dailyFees\n2024-01-01,ethereum,500000,2500\n2024-01-01,arbitrum,300000,1500\n2024-01-02,ethereum,520000,2600'}
+          />
+        </Form.Item>
+
+        {dimRefillLoadFromCsv && (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16, borderRadius: 8 }}
+            message={<Text strong>Before saving CSV records</Text>}
+            description={
+              <Space direction="vertical" size={10} style={{ width: '100%', marginTop: 4 }}>
+                <div>
+                  <Tag color="blue" style={{ marginInlineEnd: 6 }}>Chains</Tag>
+                  Add a <b>chain</b> column when the protocol runs on multiple chains. Without it, every value is
+                  attributed to the protocol's first chain.
+                </div>
+                <div>
+                  <Tag color="red" style={{ marginInlineEnd: 6 }}>Overwrite</Tag>
+                  Saving <b>replaces the whole record</b>, so include <b>every dimension the adapter normally
+                  returns</b> (e.g. fees: <code>dailyFees</code>, <code>dailyRevenue</code>, …). Any dimension
+                  missing from the CSV is dropped. The run output lists the other dimensions this adapter type
+                  supports.
+                </div>
+                <div>
+                  <Tag color="gold" style={{ marginInlineEnd: 6 }}>Raw USD only</Tag>
+                  Values are stored as <b>raw USD numbers</b>. Token-breakdown adapters are <b>not yet
+                  supported</b> only aggregated USD values per chain are saved.
+                </div>
+              </Space>
+            }
+          />
+        )}
+        </>}
+
+        {!dimDeleteAction && !dimRefillLoadFromCsv && <>
         <Form.Item
           label="Parallel Count"
           name="parallelCount"
@@ -1684,6 +1761,37 @@ const App = () => {
     setSpikesSelectedRowKeys([]);
   }
 
+  function refillSpike(record) {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    const start = record.event?.startTimestamp;
+    if (!start) return;
+    const end = record.event?.endTimestamp || start;
+    wsRef.current.send(JSON.stringify({
+      type: 'tvl-runCommand',
+      data: {
+        action: 'refill',
+        protocolName: record.protocolName,
+        dateFrom: start - 86400,
+        dateTo: end,
+        parallelCount: 1,
+        maxRetries: 3,
+        chains: record.event?.chain || '',
+        skipBlockFetch: false,
+        breakIfTvlIsZero: false,
+        removeTokenTvl: false,
+        removeTokenTvlSymbols: '',
+        skipMissingChains: false,
+      },
+    }));
+  }
+
+  function bulkRefillSpikes() {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    const selectedRecords = spikesData.filter(r => spikesSelectedRowKeys.includes(r._id));
+    for (const r of selectedRecords) refillSpike(r);
+    setSpikesSelectedRowKeys([]);
+  }
+
   function fmtNum(n) {
     if (n == null || isNaN(n)) return '-';
     const sign = n < 0 ? '-' : '';
@@ -1707,8 +1815,34 @@ const App = () => {
     }
   }
 
+  function getSpikeRefillability(record) {
+    const refillabilityMap = formOptions.tvlProtocolRefillability
+    if (!refillabilityMap) {
+      return { refillableBySpikeTool: true, };
+    }
+
+    const keys = [
+      record.protocolId,
+      record.protocolName,
+      record.protocolSlug,
+      record.protocolName?.toLowerCase(),
+      record.protocolSlug?.toLowerCase(),
+    ].filter(Boolean);
+
+    for (const key of keys) {
+      const info = refillabilityMap[String(key)];
+      if (info) return info;
+    }
+
+    return {
+      refillableBySpikeTool: false,
+    };
+  }
+
   function spikesRecordFilter(r) {
     if (!spikesFilterResolved && r.resolved) return false;
+    if (!spikesShowNonRefillable && !getSpikeRefillability(r).refillableBySpikeTool) return false;
+    if (spikesExcludedCategories.includes(r.category)) return false;
     if (Math.abs(r.event?.changeValue || 0) < spikesMinChangeValue) return false;
     if (Math.abs(r.event?.changePct || 0) < spikesMinChangePct) return false;
     if (spikesDateRange && spikesDateRange[0] && spikesDateRange[1]) {
@@ -1721,6 +1855,10 @@ const App = () => {
   }
 
   function getSpikesForm() {
+    const spikesCategoryOptions = [...new Set(spikesData.map(r => r.category).filter(Boolean))]
+      .sort()
+      .map(category => ({ label: category, value: category }));
+
     return (
       <div style={{ maxWidth: '400px', padding: '10px' }}>
         <h3>TVL Spikes & Drops</h3>
@@ -1777,6 +1915,33 @@ const App = () => {
           </div>
 
           <div>
+            <span style={{ marginRight: 8 }}>Show non-refillable: </span>
+            <Switch
+              checked={spikesShowNonRefillable}
+              onChange={setSpikesShowNonRefillable}
+              checkedChildren="Yes"
+              unCheckedChildren="No"
+            />
+          </div>
+
+          <div>
+            <span style={{ display: 'block', marginBottom: 4 }}>Exclude categories:</span>
+            <Select
+              mode="multiple"
+              allowClear
+              maxTagCount="responsive"
+              placeholder="Select categories to hide"
+              style={{ width: '100%' }}
+              value={spikesExcludedCategories}
+              options={spikesCategoryOptions}
+              optionFilterProp="label"
+              onChange={(categories) => {
+                setSpikesExcludedCategories(categories);
+              }}
+            />
+          </div>
+
+          <div>
             <span style={{ display: 'block', marginBottom: 4 }}>Min change value:</span>
             <InputNumber
               style={{ width: '100%' }}
@@ -1826,6 +1991,32 @@ const App = () => {
     if (!spikesData?.length) return null;
 
     const filteredData = spikesData.filter(r => spikesRecordFilter(r));
+    const spikesTablePageSize = spikesTableState.pagination?.pageSize || 100;
+    const spikesTableCurrentPage = Math.min(
+      spikesTableState.pagination?.current || 1,
+      Math.max(Math.ceil(filteredData.length / spikesTablePageSize), 1)
+    );
+    const spikesTableFilters = spikesTableState.filters || {};
+
+    const getSpikesColumnState = (key) => ({
+      filteredValue: Object.prototype.hasOwnProperty.call(spikesTableFilters, key) ? spikesTableFilters[key] : null,
+      sortOrder: spikesTableState.sorter?.columnKey === key ? spikesTableState.sorter.order : null,
+    });
+
+    const handleSpikesTableChange = (pagination, filters, sorter) => {
+      const activeSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+      setSpikesTableState({
+        pagination: {
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+        },
+        filters,
+        sorter: {
+          columnKey: activeSorter?.columnKey || null,
+          order: activeSorter?.order || null,
+        },
+      });
+    };
 
     const textSearchFilter = (dataIndex, placeholder) => ({
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
@@ -1895,6 +2086,7 @@ const App = () => {
         key: 'protocolName',
         sorter: (a, b) => (a.protocolName || '').localeCompare(b.protocolName || ''),
         ...textSearchFilter('protocolName', 'Search protocol'),
+        ...getSpikesColumnState('protocolName'),
         render: (text, record) => (
           <a href={`https://defillama.com/protocol/${record.protocolSlug}`} target="_blank" rel="noreferrer">
             {text}
@@ -1909,6 +2101,7 @@ const App = () => {
         sorter: (a, b) => (a.category || '').localeCompare(b.category || ''),
         filters: [...new Set(spikesData.map(r => r.category).filter(Boolean))].sort().map(c => ({ text: c, value: c })),
         onFilter: (value, record) => record.category === value,
+        ...getSpikesColumnState('category'),
       },
       {
         title: 'Type',
@@ -1920,6 +2113,7 @@ const App = () => {
           { text: 'Drop', value: 'drop' },
         ],
         onFilter: (value, record) => record.event?.type === value,
+        ...getSpikesColumnState('type'),
         render: (text) => (
           <Tag color={text === 'spike' ? 'red' : 'blue'}>{(text || '').toUpperCase()}</Tag>
         ),
@@ -1934,6 +2128,7 @@ const App = () => {
           { text: 'Chain', value: 'chain' },
         ],
         onFilter: (value, record) => (record.event?.level || '') === value,
+        ...getSpikesColumnState('level'),
         render: (_, record) => {
           const e = record.event || {};
           return e.chain ? `chain/${e.chain}` : 'global';
@@ -1945,13 +2140,14 @@ const App = () => {
         dataIndex: ['event', 'chain'],
         filters: [...new Set(spikesData.map(r => r.event?.chain).filter(Boolean))].map(c => ({ text: c, value: c })),
         onFilter: (value, record) => record.event?.chain === value,
+        ...getSpikesColumnState('chain'),
         render: (text) => text || '-',
       },
       {
         title: 'Start',
         key: 'start',
         sorter: (a, b) => (a.event?.startTimestamp || 0) - (b.event?.startTimestamp || 0),
-        defaultSortOrder: 'descend',
+        ...getSpikesColumnState('start'),
         render: (_, record) => {
           const ts = record.event?.startTimestamp;
           return ts ? new Date(ts * 1000).toISOString().slice(0, 10) : '-';
@@ -1962,6 +2158,7 @@ const App = () => {
         key: 'duration',
         width: 80,
         sorter: (a, b) => (a.event?.durationDays || 0) - (b.event?.durationDays || 0),
+        ...getSpikesColumnState('duration'),
         render: (_, record) => `${record.event?.durationDays || 0}d`,
       },
       {
@@ -1969,6 +2166,7 @@ const App = () => {
         key: 'changePct',
         width: 90,
         sorter: (a, b) => Math.abs(a.event?.changePct || 0) - Math.abs(b.event?.changePct || 0),
+        ...getSpikesColumnState('changePct'),
         render: (_, record) => {
           const pct = record.event?.changePct;
           if (pct == null) return '-';
@@ -1981,6 +2179,7 @@ const App = () => {
         key: 'changeValue',
         width: 110,
         sorter: (a, b) => Math.abs(a.event?.changeValue || 0) - Math.abs(b.event?.changeValue || 0),
+        ...getSpikesColumnState('changeValue'),
         render: (_, record) => fmtNum(record.event?.changeValue),
       },
       {
@@ -1988,6 +2187,7 @@ const App = () => {
         key: 'preValue',
         width: 100,
         sorter: (a, b) => (a.event?.preValue || 0) - (b.event?.preValue || 0),
+        ...getSpikesColumnState('preValue'),
         render: (_, record) => fmtNum(record.event?.preValue),
       },
       {
@@ -2010,6 +2210,7 @@ const App = () => {
         key: 'score',
         width: 70,
         sorter: (a, b) => (a.score || 0) - (b.score || 0),
+        ...getSpikesColumnState('score'),
       },
       {
         title: 'Assigned',
@@ -2022,6 +2223,7 @@ const App = () => {
           ...[...new Set(spikesData.map(r => r.assigned).filter(Boolean))].map(a => ({ text: a, value: a })),
         ],
         onFilter: (value, record) => value === '__empty__' ? !record.assigned : record.assigned === value,
+        ...getSpikesColumnState('assigned'),
         render: (_, record) => inlineEditCell(record, 'assigned', spikesEditingAssigned, setSpikesEditingAssigned, spikesAssignedValue, setSpikesAssignedValue),
       },
       {
@@ -2039,6 +2241,7 @@ const App = () => {
           { text: 'Unresolved', value: false },
         ],
         onFilter: (value, record) => !!record.resolved === value,
+        ...getSpikesColumnState('resolved'),
         render: (_, record) => (
           <Switch
             size="small"
@@ -2097,6 +2300,9 @@ const App = () => {
             <Button size="small" onClick={() => bulkUpdateSpikes({ resolved: false })}>
               Mark Unresolved
             </Button>
+            <Button size="small" type="primary" icon={<ReloadOutlined />} onClick={bulkRefillSpikes}>
+              Refill
+            </Button>
             <Button size="small" danger onClick={() => setSpikesSelectedRowKeys([])}>
               Clear Selection
             </Button>
@@ -2106,7 +2312,13 @@ const App = () => {
         <Table
           columns={columns}
           dataSource={filteredData}
-          pagination={{ pageSize: 100, showSizeChanger: true, pageSizeOptions: [50, 100, 500, 5000] }}
+          pagination={{
+            current: spikesTableCurrentPage,
+            pageSize: spikesTablePageSize,
+            showSizeChanger: true,
+            pageSizeOptions: [50, 100, 500, 5000],
+          }}
+          onChange={handleSpikesTableChange}
           rowKey={(record) => record._id}
           size="small"
           scroll={{ x: 1600 }}

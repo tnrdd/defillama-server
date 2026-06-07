@@ -4,7 +4,6 @@ import {
     storeRouteData,
     clearOldCacheVersions,
     getCacheVersion,
-    getSyncMetadata,
     setSyncMetadata,
     storeHistoricalDataForId,
     readHistoricalDataForId,
@@ -17,8 +16,11 @@ import {
     fetchAllDailyRecordsPG,
     fetchMaxUpdatedAtPG,
     fetchAllDailyIdsPG,
+    fetchLatestHourlyForChartTipsPG,
+    PerpsChartTipRow,
 } from './db';
 import { getPercentChangeOrNull, toFiniteNumberOrZero, groupBy } from './utils';
+import { getTimestampAtStartOfDay } from '../../utils/date';
 import { main as runPipeline } from './perps';
 import {
     buildCategoryHistoricalCharts,
@@ -158,29 +160,76 @@ async function generateList(currentData: any[]): Promise<void> {
     console.log(`Generated list.json`);
 }
 
-async function generateHistoricalCharts(): Promise<void> {
+function stripLiveTips<T extends { timestamp: number }>(data: T[]): T[] {
+    if (!data || data.length === 0) return data;
+    return data.filter((r) => r.timestamp === getTimestampAtStartOfDay(r.timestamp));
+}
+
+interface PerpsChartPoint {
+    timestamp: number;
+    openInterest: number;
+    volume24h: number;
+    price: number;
+    priceChange24h: number;
+    fundingRate: number;
+    premium: number;
+    cumulativeFunding: number;
+}
+
+function appendPerpsChartTip(dailyChart: PerpsChartPoint[], tip: PerpsChartTipRow | undefined): PerpsChartPoint[] {
+    if (!tip) return dailyChart;
+    // If the tip is for the same UTC day as the last daily point, drop the
+    // daily point — the hourly tip is strictly fresher than the start-of-day
+    // daily row, and keeping both leaves a visible step between the (possibly
+    // stale) 00:00 daily value and the current tip value.
+    const tipDayStart = getTimestampAtStartOfDay(tip.timestamp);
+    const lastDailyTs = dailyChart.length > 0 ? dailyChart[dailyChart.length - 1].timestamp : 0;
+    if (lastDailyTs === tipDayStart) dailyChart.pop();
+    const newLast = dailyChart.length > 0 ? dailyChart[dailyChart.length - 1].timestamp : 0;
+    if (tip.timestamp <= newLast) return dailyChart;
+    dailyChart.push({
+        timestamp: tip.timestamp,
+        openInterest: toFiniteNumberOrZero(tip.open_interest),
+        volume24h: toFiniteNumberOrZero(tip.volume_24h),
+        price: toFiniteNumberOrZero(tip.price),
+        priceChange24h: toFiniteNumberOrZero(tip.price_change_24h),
+        fundingRate: toFiniteNumberOrZero(tip.funding_rate),
+        premium: toFiniteNumberOrZero(tip.premium),
+        cumulativeFunding: toFiniteNumberOrZero(tip.cumulative_funding),
+    });
+    return dailyChart;
+}
+
+export async function generateHistoricalCharts(): Promise<void> {
     console.log('Generating historical charts...');
     const startTime = Date.now();
 
-    const syncMeta = await getSyncMetadata();
-    const lastSync = syncMeta?.lastSyncTimestamp ? new Date(syncMeta.lastSyncTimestamp) : undefined;
-
-    const allRecords = await fetchAllDailyRecordsPG(lastSync);
-    if (allRecords.length === 0) {
-        console.log('No new records to process for charts.');
-        return;
-    }
+    // Rebuild each chart's daily backbone from the FULL set of daily rows every run.
+    // Do NOT gate this fetch on an updated_at high-water-mark: a mass updated_at
+    // rewrite (deploy-time migration, backfill, etc.) can push the watermark past
+    // not-yet-merged days, which permanently freezes every chart's daily backbone
+    // while only the live tip keeps moving (the 2026-05-26 incident, PR #12118).
+    // Daily rows are the source of truth and the table is small, so the full
+    // rebuild is cheap; generateAggregateHistoricalCharts already does the same.
+    const allRecords = await fetchAllDailyRecordsPG();
+    // Latest HOURLY row per id provides a live tip appended after merging the
+    // (daily-aligned) records, so chart files refresh every cron tick even if
+    // an id had no daily update this run.
+    const latestHourlyTips = await fetchLatestHourlyForChartTipsPG();
 
     // Group records by id
     const recordsById = groupBy(allRecords, (r: any) => r.id);
+    // Process the union of (ids with new daily rows) and (ids with a hourly tip)
+    // so the tip stays fresh even for ids whose daily row didn't change.
+    const ids = Array.from(new Set([...Object.keys(recordsById), ...Object.keys(latestHourlyTips)]));
     let processedCount = 0;
 
-    for (const id in recordsById) {
+    for (const id of ids) {
         // Skip delisted/unknown markets — keeps their per-ID chart file stale
         // but prevents new data from being appended.
         if (!hasContractMetadata(id)) continue;
-        const records = recordsById[id];
-        const newData = records.map((r: any) => ({
+        const records = recordsById[id] ?? [];
+        const newData: PerpsChartPoint[] = records.map((r: any) => ({
             timestamp: r.timestamp,
             openInterest: toFiniteNumberOrZero(r.open_interest),
             volume24h: toFiniteNumberOrZero(r.volume_24h),
@@ -192,12 +241,17 @@ async function generateHistoricalCharts(): Promise<void> {
         }));
 
         const existing = await readHistoricalDataForId(id);
-        const merged = mergeHistoricalData(existing, newData);
-        await storeHistoricalDataForId(id, merged);
+        if ((!existing || existing.length === 0) && newData.length === 0) continue;
+        const existingNoTip = stripLiveTips(existing ?? []);
+        const merged = mergeHistoricalData(existingNoTip, newData);
+        const withTip = appendPerpsChartTip(merged as PerpsChartPoint[], latestHourlyTips[id]);
+        await storeHistoricalDataForId(id, withTip);
         processedCount++;
     }
 
-    // Update sync metadata
+    // Sync metadata is now informational only (lastSyncTimestamp is no longer used
+    // to gate the daily-backbone fetch above — see the comment there). Kept for
+    // dashboards / diagnostics.
     const maxUpdatedAt = await fetchMaxUpdatedAtPG();
     await setSyncMetadata({
         lastSyncTimestamp: maxUpdatedAt?.toISOString() || null,
@@ -300,12 +354,18 @@ async function cron(): Promise<void> {
     console.log(`[rwa-perps-cron] Complete in ${elapsed}s`);
 }
 
-cron()
-    .then(() => {
-        console.log("[rwa-perps-cron] Done.");
-        process.exit(0);
-    })
-    .catch((e) => {
-        console.error("[rwa-perps-cron] Fatal error:", e);
-        process.exit(1);
-    });
+// Only run the cron when invoked directly (e.g. `ts-node cron.ts`). Guarding on
+// require.main keeps the module import-safe so tests can exercise individual
+// stages (e.g. generateHistoricalCharts) without triggering runPipeline()'s
+// DB writes.
+if (require.main === module) {
+    cron()
+        .then(() => {
+            console.log("[rwa-perps-cron] Done.");
+            process.exit(0);
+        })
+        .catch((e) => {
+            console.error("[rwa-perps-cron] Fatal error:", e);
+            process.exit(1);
+        });
+}

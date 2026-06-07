@@ -11,24 +11,46 @@
 import fs from "fs";
 import path from "path";
 import https from "https";
+import crypto from "crypto";
 
-import * as sdk from '@defillama/sdk'
+import * as sdk from "@defillama/sdk";
 const { runInPromisePool } = sdk.util;
 import { prepareAtvlContext, runAtvlForTimestamp } from "../atvlRefill";
 import { getTimestampAtStartOfDay } from "../../utils/date";
-import { initPG, fetchMetadataPG, DAILY_RWA_DATA } from "../db";
+import { initPG, fetchMetadataPG, DAILY_RWA_DATA, BACKUP_RWA_DATA } from "../db";
 import { getChainIdFromDisplayName } from "../../utils/normalizeChain";
 import { Op, QueryTypes } from "sequelize";
 
 // ── Configuration ────────────────────────────────────────────────────
-const DRY_RUN = false;
-const START_DATE = "2025-09-01";
-const END_DATE = "2026-04-14";
+// Step 2 (LIVE WRITE): delete the bad mcap=0 row at 2025-08-31 from
+// daily_rwa_data so the next cron tick re-inserts a correct value (using the
+// coin price freshly filled in step 1). Phase 2's spike detector will catch
+// 2025-08-31 (ratio of $0 to ~$962M neighbors = 0 < SPIKE_RATIO_LOW=0.1) and
+// DELETE the row from daily_rwa_data + backup_rwa_data.
+//
+// What writes with DRY_RUN=false:
+//   - Phase 1: nothing (runAtvlForTimestamp called without storeResults)
+//   - Phase 2: DELETE rows flagged as spikes (the $0 row at Aug 31)
+//   - Phase 3: UPDATE rows where mcap < expected × 0.7 (price-dip recovery)
+// Both Phase 2/3 scoped to id=644 only.
+const DRY_RUN = true;
+// --merge-write enables a Phase 1.5/1.6 merge-preserve write against existing
+// DB rows, run BEFORE Phases 2-3. Chains absent from the new compute are
+// preserved from the existing row, chains present in the new compute overwrite
+// (only when non-zero).
+// Use this when an RWA has on-chain contracts on a chain whose SDK adapter
+// throws on historical timestamps (stellar/aptos/solana/sui/starknet/osmosis/
+// provenance) AND you've already backfilled that chain separately — the merge
+// preserves your backfill values for those chains while filling in fresh data
+// from the new pipeline (peggedassets, EVM archive fetches, etc.).
+const MERGE_WRITE = process.argv.includes("--merge-write");
+const START_DATE = "2021-06-09";
+const END_DATE = "2026-05-22";
 const BACKFILL_CONCURRENCY = 5;
 const ID_CONCURRENCY = 10;
 const PRICE_FETCH_CONCURRENCY = 8;
-// Private Equity & Venture asset group IDs
-const IDS = [ "2999",
+const IDS = [
+  "133",
 ];
 
 // Early-stop: if an ID has 0 data for this many consecutive days (going backwards), skip it
@@ -44,6 +66,36 @@ const MAX_SPIKE_RUN = 5;
 
 // Price-failure dip threshold
 const DIP_RATIO = 0.7;
+
+// ── Per-stage disk cache ──────────────────────────────────────────────
+// Each long-running stage writes its output to disk so a later-stage failure
+// (e.g. coins API timing out mid-Phase-3) doesn't force a full re-run.
+// Cache invalidates automatically when IDS / dates / DRY_RUN change.
+// Pass --reset-cache to wipe and start fresh.
+const CACHE_RESET = process.argv.includes("--reset-cache");
+const CACHE_ROOT = "/tmp/refill-cache";
+const CACHE_KEY = crypto.createHash("sha256").update(JSON.stringify({
+  script: "refillParallel",
+  IDS, START_DATE, END_DATE, DRY_RUN,
+})).digest("hex").slice(0, 12);
+const CACHE_DIR = path.join(CACHE_ROOT, CACHE_KEY);
+
+function cachePath(name: string): string { return path.join(CACHE_DIR, `${name}.json`); }
+function loadCache<T>(name: string): T | null {
+  if (CACHE_RESET) return null;
+  const p = cachePath(name);
+  if (!fs.existsSync(p)) return null;
+  try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return null; }
+}
+function saveCache(name: string, data: any): void {
+  fs.mkdirSync(CACHE_DIR, { recursive: true });
+  fs.writeFileSync(cachePath(name), JSON.stringify(data));
+}
+function resetCache(): void {
+  if (!fs.existsSync(CACHE_DIR)) return;
+  for (const f of fs.readdirSync(CACHE_DIR)) fs.unlinkSync(path.join(CACHE_DIR, f));
+}
+if (CACHE_RESET) { resetCache(); console.log(`[cache] reset ${CACHE_DIR}`); }
 
 // ── Helpers ──────────────────────────────────────────────────────────
 function parseJson(v: any): Record<string, number> {
@@ -82,7 +134,9 @@ interface PriceChart { prices: PricePoint[]; decimals?: number; symbol?: string 
 async function fetchPriceChart(
   coinKey: string, startTs: number, span: number,
 ): Promise<PriceChart | null> {
-  const url = `https://coins.llama.fi/chart/${encodeURIComponent(coinKey)}?start=${startTs}&span=${span}&period=1d&searchWidth=5d`;
+  const internalKey = process.env.INTERNAL_API_KEY;
+  if (!internalKey) throw new Error("INTERNAL_API_KEY is not set — refillParallel requires the pro coins API");
+  const url = `https://pro-api.llama.fi/${internalKey}/coins/chart/${encodeURIComponent(coinKey)}?start=${startTs}&span=${span}&period=1d&searchWidth=5d`;
   try {
     const resp = await fetchJson(url);
     const entry = resp?.coins?.[coinKey];
@@ -103,7 +157,7 @@ function convertAtvlResult(
   const rows: any[] = [];
   for (const id of ids) {
     if (!data[id]) continue;
-    const { onChainMcap, activeMcap } = data[id];
+    const { onChainMcap, activeMcap, totalSupply } = data[id];
 
     const mcap: Record<string, number> = {};
     let aggregatemcap = 0;
@@ -119,6 +173,15 @@ function convertAtvlResult(
       const slug = getChainIdFromDisplayName(chain);
       activemcap[slug] = Number(val) || 0;
       aggregatedactivemcap += activemcap[slug];
+    }
+
+    // Capture per-chain totalSupply (atvlRefill writes it as `totalSupply` keyed
+    // by display name). Needed for the merge-preserve write to mirror the supply
+    // changes alongside the mcap/activemcap changes.
+    const totalsupply: Record<string, number> = {};
+    for (const [chain, val] of Object.entries(totalSupply ?? {})) {
+      const slug = getChainIdFromDisplayName(chain);
+      totalsupply[slug] = Number(val) || 0;
     }
 
     rows.push({
@@ -145,8 +208,16 @@ async function runBackfill(
   startDate: string,
   endDate: string,
   ids: string[],
-  collectResults: boolean,
 ): Promise<any[]> {
+  // Phase 1 cache — always cache regardless of collectResults, so a commit-mode
+  // run that fails in Phase 3 can skip Phase 1's ~70-min atvl work on retry.
+  // Cache invalidates on IDS / dates / DRY_RUN change (different CACHE_KEY).
+  const cached = loadCache<any[]>("phase1");
+  if (cached && cached.length > 0) {
+    console.log(`\n── Phase 1: SKIPPED — loaded ${cached.length} cached rows from ${cachePath("phase1")} (pass --reset-cache to redo)`);
+    return cached;
+  }
+
   const start = Math.floor(new Date(startDate).getTime() / 1000);
   const end = Math.floor(new Date(endDate).getTime() / 1000);
   process.env.RWA_REFILL_INCLUSIVE = "true";
@@ -206,7 +277,7 @@ async function runBackfill(
             }
           }
 
-          if (collectResults && result) {
+          if (result) {
             collected.push(...convertAtvlResult(timestamp, result, activeIds));
           }
         } catch (e) {
@@ -228,9 +299,17 @@ async function runBackfill(
       console.log(`  Pruned ${newlyPruned.length} IDs with ${ZERO_STREAK_CUTOFF}+ consecutive zero days: ${newlyPruned.join(", ")}`);
       activeIds = activeIds.filter((id) => !prunedIds.has(id));
     }
+
+    // Checkpoint after each chunk — if a later chunk fails, we don't lose
+    // earlier work. Always cache so commit-mode reruns also benefit.
+    if (collected.length > 0) saveCache("phase1", collected);
   }
 
   console.log(`  Backfill done. Errors: ${totalErrors.length}/${allTimestamps.length}, pruned: ${prunedIds.size}/${ids.length} IDs`);
+  if (collected.length > 0) {
+    saveCache("phase1", collected);
+    console.log(`  [cache] Phase 1 → ${cachePath("phase1")} (${collected.length} rows)`);
+  }
   return collected;
 }
 
@@ -497,7 +576,16 @@ async function processOneId(
     const lastTs = Number(rowsAfterSpikes[rowsAfterSpikes.length - 1].timestamp);
     const spanDays = Math.ceil((lastTs - firstTs) / 86400) + 1;
 
-    const priceByChainTs = await fetchAllPriceCharts(contracts, firstTs, spanDays);
+    // Per-asset price-chart cache so a coins API failure on asset N doesn't
+    // force re-fetching prices for assets 1..N-1 on the next run.
+    const priceCacheKey = `prices-${id}-${firstTs}-${lastTs}`;
+    let priceByChainTs = loadCache<Record<string, Record<number, { price: number; decimals: number }>>>(priceCacheKey);
+    if (priceByChainTs) {
+      console.log(`  [${id}] [cache] loaded price chart from ${cachePath(priceCacheKey)}`);
+    } else {
+      priceByChainTs = await fetchAllPriceCharts(contracts, firstTs, spanDays);
+      if (Object.keys(priceByChainTs).length > 0) saveCache(priceCacheKey, priceByChainTs);
+    }
     const result = applyPriceFixes(rowsAfterSpikes, priceByChainTs);
     fixedRows = result.fixedRows;
     fixCount = result.fixCount;
@@ -653,6 +741,207 @@ function generateHtml(results: IdResult[]): string {
 </html>`;
 }
 
+// ── Pre-flight ───────────────────────────────────────────────────────
+// SDK supply adapters that THROW on a historical timestamp. atvlRefill's
+// getTotalSupplies catches the throw silently, so any chain in this set has
+// its entire mcap leg dropped from historical refills. RWAs with contracts
+// on these chains MUST be backfilled separately (using a Dune-supply CSV +
+// the per-chain backfill script) before or after refillParallel runs.
+//
+// Source: defi/l2/utils.ts — each entry that calls `if (timestamp) throw ...`.
+const HISTORICAL_INCOMPATIBLE_CHAINS = new Set([
+  "stellar", "aptos", "solana", "sui", "starknet", "osmosis", "provenance",
+]);
+const CHAIN_TO_BACKFILL_SCRIPT: Record<string, string> = {
+  stellar: "defi/src/rwa/cli/backfillStellarRwaMcap.ts",
+  solana: "defi/src/rwa/cli/backfillSolanaRwaMcap.ts",
+};
+
+export async function preflightHistoricalIncompatibleChains(ids: string[]): Promise<void> {
+  const context = await prepareAtvlContext(ids);
+  interface Hit { id: string; ticker: string; chains: string[] }
+  const hits: Hit[] = [];
+  for (const id of ids) {
+    const entry = (context.finalData as any)[id];
+    if (!entry?.contracts) continue;
+    const incompatible: string[] = [];
+    for (const chainRaw of Object.keys(entry.contracts)) {
+      const chain = String(chainRaw).toLowerCase();
+      if (HISTORICAL_INCOMPATIBLE_CHAINS.has(chain) && !incompatible.includes(chain)) {
+        incompatible.push(chain);
+      }
+    }
+    if (incompatible.length > 0) {
+      hits.push({ id, ticker: entry.ticker ?? entry.name ?? "(unnamed)", chains: incompatible });
+    }
+  }
+  if (hits.length === 0) {
+    console.log(`  Pre-flight: ✓ no historical-incompatible chains in selected IDs`);
+    return;
+  }
+  console.log("");
+  console.log("  ⚠️  Pre-flight WARNING — assets with throw-on-historical chains");
+  console.log("  These chains will be SILENTLY DROPPED from historical refills by");
+  console.log("  atvlRefill's getTotalSupplies catch. The affected mcap leg becomes $0,");
+  console.log("  which can cause large step-downs / step-ups when the daily cron later");
+  console.log("  fetches the live 'now' supply (see BENJI/BRZ jump on 2026-05-22).");
+  console.log("");
+  for (const h of hits) {
+    const scripts = h.chains
+      .map((c) => CHAIN_TO_BACKFILL_SCRIPT[c] ?? `(no backfill script for ${c})`)
+      .join(" + ");
+    console.log(`    • ${h.ticker.padEnd(12)} (id=${h.id})  chains: [${h.chains.join(", ")}]`);
+    console.log(`        run first: ${scripts}`);
+  }
+  console.log("");
+  if (!MERGE_WRITE) {
+    console.log(`  ⚠️  --merge-write is OFF. Phase 3 will overwrite mcap on dip-rows,`);
+    console.log(`     dropping any previously-backfilled values for these chains.`);
+    console.log(`     Pass --merge-write to preserve per-chain values from existing rows.`);
+  } else {
+    console.log(`  ✓ --merge-write is ON. Merge-preserve write will preserve existing per-chain`);
+    console.log(`    values the new compute doesn't produce (e.g. stellar from your backfill).`);
+  }
+  console.log("");
+  console.log(`  This warning is informational — refillParallel will continue.`);
+  console.log(`  Use a per-chain backfill script BEFORE or AFTER this run to fill the gap.`);
+  console.log("");
+}
+
+// ── Phase 1.5/1.6: Merge-preserve write ──────────────────────────────
+// For each row produced by Phase 1, fetch the existing DB row and merge per
+// chain: chains the new compute has (with non-zero values) overwrite, chains
+// it doesn't have (or has at 0) are preserved from the existing row. Then
+// recompute aggregates from the merged chain map and write. Runs BEFORE
+// Phases 2-3 so spike-removal and price-fix mutations survive in the DB.
+//
+// This is the per-chain analog of the `isMissing` guard used by the
+// backfillXxxRwaMcap.ts scripts, hoisted into the refillParallel pipeline so
+// you can safely re-run refillParallel on an RWA whose Stellar/Aptos/Solana
+// legs have been backfilled separately — those chains' values survive the
+// rewrite instead of getting silently dropped.
+//
+// Does NOT touch: defiactivetvl, aggregatedefiactivetvl (not in
+// updateOnDuplicate, so untouched on existing rows; remain null on rows that
+// don't exist yet).
+function sumChainMap(m: { [k: string]: any }): number {
+  let s = 0;
+  for (const v of Object.values(m)) {
+    const n = Number(v);
+    if (Number.isFinite(n)) s += n;
+  }
+  return s;
+}
+
+// Merge two per-chain maps: for each chain present in `newMap` with a
+// non-zero value, that value wins; otherwise the existing value is preserved.
+function mergePerChain(
+  newMap: { [k: string]: any },
+  existingMap: { [k: string]: any },
+): { [k: string]: any } {
+  const merged = { ...existingMap };
+  for (const [chain, val] of Object.entries(newMap)) {
+    const n = Number(val);
+    if (Number.isFinite(n) && n > 0) merged[chain] = val;
+  }
+  return merged;
+}
+
+// Compute the merged per-chain rows from Phase 1's collected output and the
+// existing DB rows. Returns rows in the same shape as Phase 1's `convertAtvlResult`
+// output (so downstream Phase 2-3 + Phase 5 HTML preview see the merged
+// chart shape, not Phase 1's chain-dropped shape). Does NOT write to DB.
+async function computeMergedCollectedRows(collectedRows: any[]): Promise<any[]> {
+  const byId = new Map<string, any[]>();
+  for (const r of collectedRows) {
+    const arr = byId.get(r.id) ?? [];
+    arr.push(r);
+    byId.set(r.id, arr);
+  }
+
+  const merged: any[] = [];
+  for (const [id, rows] of byId) {
+    const timestamps = rows.map((r) => Number(r.timestamp));
+    const existingRows = await DAILY_RWA_DATA.findAll({
+      where: { id, timestamp: { [Op.in]: timestamps } },
+      raw: true,
+    }) as any[];
+    const existingByTs = new Map<number, any>();
+    for (const e of existingRows) existingByTs.set(Number(e.timestamp), e);
+
+    // Diagnostic counters
+    let preservedChainsByName: Record<string, number> = {};
+
+    for (const r of rows) {
+      const ts = Number(r.timestamp);
+      const newMcap = parseJson(r.mcap);
+      const newActiveMcap = parseJson(r.activemcap);
+      const newTotalSupply = parseJson(r.totalsupply);
+
+      const existing = existingByTs.get(ts);
+      const existingMcap = existing ? parseJson(existing.mcap) : {};
+      const existingActiveMcap = existing ? parseJson(existing.activemcap) : {};
+      const existingTotalSupply = existing ? parseJson(existing.totalsupply) : {};
+
+      const mergedMcap = mergePerChain(newMcap, existingMcap);
+      const mergedActiveMcap = mergePerChain(newActiveMcap, existingActiveMcap);
+      const mergedTotalSupply = mergePerChain(newTotalSupply, existingTotalSupply);
+
+      // Track which chains we preserved (existing-only, not in new)
+      for (const chain of Object.keys(existingMcap)) {
+        if (!(chain in newMcap) || Number(newMcap[chain]) === 0) {
+          if (Number(existingMcap[chain]) > 0) {
+            preservedChainsByName[chain] = (preservedChainsByName[chain] ?? 0) + 1;
+          }
+        }
+      }
+
+      merged.push({
+        timestamp: ts,
+        id,
+        mcap: JSON.stringify(mergedMcap),
+        activemcap: JSON.stringify(mergedActiveMcap),
+        totalsupply: JSON.stringify(mergedTotalSupply),
+        aggregatemcap: sumChainMap(mergedMcap),
+        aggregatedactivemcap: sumChainMap(mergedActiveMcap),
+      });
+    }
+
+    const preservedSummary = Object.entries(preservedChainsByName)
+      .sort((a, b) => b[1] - a[1])
+      .map(([c, n]) => `${c}=${n}`)
+      .join(", ");
+    console.log(
+      `  [${id}] merge: ${rows.length} rows` +
+      (preservedSummary ? `  preserved chains from existing rows: [${preservedSummary}]` : "  no existing chains needed preservation")
+    );
+  }
+  return merged;
+}
+
+// Write the merged rows to daily_rwa_data + backup_rwa_data. Only called when
+// !DRY_RUN.
+async function writeMergedRows(mergedCollectedRows: any[]): Promise<void> {
+  if (mergedCollectedRows.length === 0) return;
+  const now = new Date();
+  const dailyInserts = mergedCollectedRows.map((r) => ({
+    timestamp: Number(r.timestamp),
+    timestamp_actual: Number(r.timestamp),
+    id: r.id,
+    mcap: r.mcap,
+    activemcap: r.activemcap,
+    totalsupply: r.totalsupply,
+    aggregatemcap: r.aggregatemcap,
+    aggregatedactivemcap: r.aggregatedactivemcap,
+    created_at: now,
+    updated_at: now,
+  }));
+  const backupInserts = dailyInserts.map(({ timestamp_actual, ...rest }) => rest);
+  const upd = ["mcap", "activemcap", "totalsupply", "aggregatemcap", "aggregatedactivemcap", "updated_at"];
+  await DAILY_RWA_DATA.bulkCreate(dailyInserts as any[], { updateOnDuplicate: upd });
+  await BACKUP_RWA_DATA.bulkCreate(backupInserts as any[], { updateOnDuplicate: upd });
+}
+
 // ── Main ─────────────────────────────────────────────────────────────
 async function main() {
   const t0 = Date.now();
@@ -666,9 +955,32 @@ async function main() {
   console.log(`  Concurrency: backfill=${BACKFILL_CONCURRENCY}, ids=${ID_CONCURRENCY}, priceFetch=${PRICE_FETCH_CONCURRENCY}`);
   console.log(`${"=".repeat(60)}`);
 
+  await preflightHistoricalIncompatibleChains(IDS);
+
   // Phase 1: Backfill
   process.env.RWA_DRY_RUN = "false";
-  const collectedRows = await runBackfill(START_DATE, END_DATE, IDS, DRY_RUN);
+  let collectedRows = await runBackfill(START_DATE, END_DATE, IDS);
+
+  // Phase 1.5 (when --merge-write): compute merged rows in memory so Phases 2-3
+  // and the HTML preview reflect the post-merge chart shape. Without this, the
+  // preview would show Phase 1's chain-dropped output (e.g. ~$52M for BRZ
+  // because Stellar throws on historical and gets dropped), which is misleading.
+  // The merged rows are persisted to DB here (before Phases 2-3) when !DRY_RUN,
+  // so Phases 2-3 then read/mutate the already-merged DB state — Phase 2 spike
+  // deletions and Phase 3 price-fix UPDATEs survive instead of being clobbered
+  // by a post-cleanup re-write.
+  if (MERGE_WRITE && collectedRows.length > 0) {
+    console.log(`\n── Phase 1.5: Compute merged rows (DRY_RUN=${DRY_RUN}) ──`);
+    collectedRows = await computeMergedCollectedRows(collectedRows);
+
+    if (!DRY_RUN) {
+      console.log(`── Phase 1.6: Write merged rows to DB ──`);
+      await writeMergedRows(collectedRows);
+      console.log(`  Wrote ${collectedRows.length} merged rows to daily_rwa_data + backup_rwa_data`);
+    } else {
+      console.log(`  (merge-write): DRY_RUN — skipped persistence (preview reflects merged shape)`);
+    }
+  }
 
   // Group collected rows by ID (only used in DRY_RUN)
   const collectedById = new Map<string, any[]>();
@@ -701,7 +1013,7 @@ async function main() {
   const idOrder = new Map(IDS.map((id, i) => [id, i]));
   results.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0));
 
-  // Phase 4: Generate HTML preview
+  // Phase 5: Generate HTML preview
   if (results.length > 0) {
     const html = generateHtml(results);
     const outPath = path.join(__dirname, "refill-preview.html");
@@ -722,5 +1034,7 @@ async function main() {
   process.exit();
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
-// ts-node defi/src/rwa/cli/refillCleanParallel.ts
+if (require.main === module) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}
+// caffeinate -i ts-node defi/src/rwa/cli/refillParallel.ts

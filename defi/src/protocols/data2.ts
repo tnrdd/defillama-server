@@ -1177,7 +1177,8 @@ const data2: Protocol[] = [
     listedAt: 1645139464,
     dimensions: {
       dexs: "pegasys"
-    }
+    },
+    deadUrl: true,
   },
   {
     id: "1433",
@@ -2002,6 +2003,7 @@ const data2: Protocol[] = [
     module: "btn-group.js",
     twitter: "BtnGroup",
     listedAt: 1645820777,
+    deadUrl: true,
   },
   {
     id: "1470",
@@ -2876,6 +2878,7 @@ const data2: Protocol[] = [
     module: "solanax.js",
     twitter: "Solanaxorg",
     listedAt: 1646426734,
+    deadUrl: true,
   },
   {
     id: "1510",
@@ -3287,6 +3290,7 @@ const data2: Protocol[] = [
     twitter: "BlinDEXio",
     audit_links: ["https://docs.blindex.io/smart-contracts/audits"],
     listedAt: 1646949250,
+    deadUrl: true,
   },
   {
     id: "1529",
@@ -4146,6 +4150,7 @@ const data2: Protocol[] = [
       "https://github.com/peckshield/publications/blob/master/audit_reports/PeckShield-Audit-Report-ERC20-LuckyChip-v1.0.pdf",
     ],
     listedAt: 1647812879,
+    deadUrl: true,
   },
   {
     id: "1568",
@@ -5026,6 +5031,7 @@ const data2: Protocol[] = [
     twitter: "kagla_fi",
     listedAt: 1649072470,
     github: ["kagla-finance"],
+    deprecated: true,
   },
   {
     id: "1609",
@@ -6278,6 +6284,9 @@ const data2: Protocol[] = [
     audit_links: ["https://github.com/LlamaPay/llamapay/blob/master/audits/PeckShield-Audit-Report-LlamaPay-v1.0.pdf"],
     listedAt: 1650367042,
     github: ["LlamaPay"],
+    dimensions: {
+      dexs: "llamapay",
+    },
   },
   {
     id: "1665",
@@ -6513,6 +6522,7 @@ const data2: Protocol[] = [
     twitter: "CENNZnet",
     listedAt: 1650586534,
     github: ["cennznet"],
+    deadUrl: true,
   },
   {
     id: "1676",
@@ -7701,6 +7711,7 @@ const data2: Protocol[] = [
     module: "honkswap/index.js",
     twitter: "World_of_Honk",
     listedAt: 1651751901,
+    deadUrl: true,
   },
   {
     id: "1732",
@@ -7811,6 +7822,7 @@ const data2: Protocol[] = [
     twitter: "muuu_fi",
     listedAt: 1651792802,
     github: ["muuu-finance"],
+    deprecated: true,
   },
   {
     id: "1737",
@@ -9711,6 +9723,7 @@ const data2: Protocol[] = [
     twitter: "AstarFarm",
     audit_links: ["https://app.gitbook.com/s/GcFuzD35Csw8XaIbghDA/information/security-and-audits"],
     listedAt: 1655205337,
+    deadUrl: true,
   },
   {
     id: "1822",
@@ -9863,7 +9876,8 @@ const data2: Protocol[] = [
     listedAt: 1655466324,
     dimensions: {
       dexs: "sharkswap"
-    }
+    },
+    deadUrl: true,
   },
   {
     id: "1829",
@@ -11897,6 +11911,7 @@ const data2: Protocol[] = [
     module: "onc/index.js",
     twitter: "ordernchaos_fi",
     listedAt: 1658736615,
+    deadUrl: true,
   },
   {
     id: "1921",
@@ -13160,6 +13175,7 @@ const data2: Protocol[] = [
     chains: ["Dogechain"],
     module: "yodeswap/index.js",
     twitter: "Yodeswap",
+    deadUrl: true,
     forkedFromIds: ["2197"],
     listedAt: 1660728749,
     dimensions: {
@@ -13266,6 +13282,7 @@ const data2: Protocol[] = [
     module: "canto-dex/index.js",
     twitter: "CantoPublic",
     listedAt: 1660767766,
+    deadUrl: true,
     dimensions: {
       dexs: "canto-dex"
     }
@@ -13288,6 +13305,7 @@ const data2: Protocol[] = [
     twitter: "CantoPublic",
     forkedFromIds: ["114"],
     listedAt: 1660767769,
+    deadUrl: true,
     dimensions: {
       fees: "canto-lending"
     }
@@ -13547,7 +13565,7 @@ const data2: Protocol[] = [
     category: "Lending",
     chains: ["Ethereum"],
     module: "morpho/index.js",
-    twitter: "MorphoLabs",
+    twitter: "Morpho",
     oraclesBreakdown: [ { name: "Chainlink", type: "Primary", proof: []} ],
     audit_links: ["https://docs.morpho.org/security-reviews"],
     listedAt: 1660946171,
@@ -13641,7 +13659,8 @@ const data2: Protocol[] = [
     parentProtocol: "parent#demex",
     listedAt: 1661118051,
     dimensions: {
-      derivatives: "demex-demex-perp"
+      derivatives: "demex-demex-perp",
+      "open-interest": "demex-perp"
     }
   },
   {
@@ -17426,7 +17445,7 @@ const data2: Protocol[] = [
     category: "Lending",
     chains: ["Ethereum"],
     module: "morpho-aave/index.js",
-    twitter: "MorphoLabs",
+    twitter: "Morpho",
     oraclesBreakdown: [ { name: "Chainlink", type: "Primary", proof: []} ],
     audit_links: ["https://docs.morpho.org/security-reviews"],
     listedAt: 1665186810,
@@ -20758,7 +20777,7 @@ const data2: Protocol[] = [
     symbol: "GT",
     url: "https://www.gate.com",
     description:
-      "Established in 2013, Gate is a cryptocurrency exchange serving over 50 million global users. The platform supports spot trading, futures trading, margin trading, and wealth management products for more than 4,500 cryptocurrencies, using zero-knowledge technology to ensure transparency and verifiability of user assets. Various Gate entities have obtained or completed regulatory registrations, licences, authorizations, or approvals across various jurisdictions, such as Lithuania, Argentina, Malta, Italy, Gibraltar, Bahamas, and Hong Kong. In 2024, Gate Group also completed the acquisition of a Japan-licensed exchange. In April 2025, Gate Technology FZE ('Gate Dubai'), a part of Gate Group, obtained a full operational license from the Virtual Assets Regulatory Authority (VARA) in Dubai. In October 2025, Gate Technology Ltd., a part of Gate Group, secured the MiCA license from Malta Financial Services Authority to provide crypto asset exchange and custody services to its clients. In February 2026, Gate Technology Ltd, officially obtained a Payment Institution license under the EU's Second Payment Services Directive (PSD2) from the Malta Financial Services Authority (MFSA).",
+      "Established in 2013, Gate is a cryptocurrency exchange serving over 53 million+ global users. The platform supports spot trading, futures trading, margin trading, and wealth management products for more than 4,600+ cryptocurrencies, using zero-knowledge technology to ensure transparency and verifiability of user assets. Various Gate entities have obtained or completed regulatory registrations, licences, authorizations, or approvals across various jurisdictions, such as Lithuania, Argentina, Malta, Italy, Gibraltar, Bahamas, and Hong Kong. In 2024, Gate Group also completed the acquisition of a Japan-licensed exchange. In April 2025, Gate Technology FZE ('Gate Dubai'), a part of Gate Group, obtained a full operational license from the Virtual Assets Regulatory Authority (VARA) in Dubai",
     chain: "Ethereum",
     logo: `${baseIconsUrl}/gate.jpg`,
     audits: "0",
@@ -20970,6 +20989,7 @@ const data2: Protocol[] = [
     twitter: "Lympo_io",
     audit_links: ["https://www.fairyproof.com/report/Sport"],
     listedAt: 1669741639,
+    deadUrl: true,
   },
   {
     id: "2324",
@@ -21368,6 +21388,7 @@ const data2: Protocol[] = [
     audit_links: ["https://paladinsec.co/projects/polycat-finance", "https://www.certik.com/projects/polycatfinance"],
     parentProtocol: "parent#polycat-finance",
     listedAt: 1670499599,
+    deadUrl: true,
   },
   {
     id: "2342",
@@ -25797,6 +25818,7 @@ const data2: Protocol[] = [
     chains: ["Ethereum"],
     module: "dummy.js",
     twitter: "NFTEarth_L2",
+    deadUrl: true,
     dimensions: {
       fees: "nftearth"
     }
@@ -27957,7 +27979,10 @@ const data2: Protocol[] = [
     governanceID: ["snapshot:cow.eth"],
     deadUrl: true,
     dimensions: {
-      fees: "cow-protocol",
+      fees: {
+        adapter: "cow-protocol",
+        genuineSpikes: [["2025-11-04", "Significant settlement due to MEV Blocker sale"]],
+      },
       aggregators: {
         genuineSpikes: [["2024-08-05", "-"]],
         adapter: "cowswap"

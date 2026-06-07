@@ -30,7 +30,12 @@ jest.mock("./api2/cache/file-cache", () => ({
 import { craftProtocolsResponse } from "./getProtocols";
 import { getProtocolTvl } from "./utils/getProtocolTvl";
 import { readRouteData } from "./api2/cache/file-cache";
-import { getVisibleChainLabels, hasDimensionsChainVisibility, storeGetProtocols } from "./storeGetProtocols";
+import {
+  getDimensionConfiguredChainLabels,
+  getVisibleChainLabels,
+  hasDimensionsChainVisibility,
+  storeGetProtocols,
+} from "./storeGetProtocols";
 
 const mockedCraftProtocolsResponse = craftProtocolsResponse as jest.MockedFunction<typeof craftProtocolsResponse>;
 const mockedGetProtocolTvl = getProtocolTvl as jest.MockedFunction<typeof getProtocolTvl>;
@@ -62,6 +67,32 @@ describe("storeGetProtocols visible chain filtering", () => {
       "OP Mainnet",
       "Hyperliquid L1",
     ]);
+  });
+
+  test("helper derives directly dimension-configured chains without including HyperEVM", () => {
+    const chains = getDimensionConfiguredChainLabels();
+
+    expect(chains).toEqual(
+      expect.arrayContaining([
+        "Adventure Layer",
+        "Akash",
+        "AlienX",
+        "Appchain",
+        "Arweave",
+        "Deri Chain",
+        "Heima",
+        "Moca",
+        "Molten Network",
+        "Monero",
+        "Mythos",
+        "NeuroWeb",
+        "Pendulum",
+        "Robonomics",
+        "Seda",
+        "SKALE",
+      ])
+    );
+    expect(chains).not.toContain("HyperEVM");
   });
 
   test("storeGetProtocols keeps protocol chains unchanged and filters top-level chains by visibility", async () => {
@@ -111,7 +142,88 @@ describe("storeGetProtocols visible chain filtering", () => {
 
     expect(protocols2Data.protocols).toHaveLength(1);
     expect(protocols2Data.protocols[0].chains).toEqual(["Ethereum"]);
-    expect(protocols2Data.chains).toEqual(["Ethereum", "Hyperliquid L1"]);
+    expect(protocols2Data.chains).toEqual(expect.arrayContaining(["Ethereum", "Hyperliquid L1", "Akash", "Arweave"]));
+    expect(protocols2Data.chains).not.toContain("HyperEVM");
+  });
+
+  test("storeGetProtocols includes chains backed by hidden chain-category protocol rows", async () => {
+    mockedCraftProtocolsResponse.mockResolvedValue([
+      {
+        id: "1",
+        name: "Visible Protocol",
+        category: "Lending",
+        chains: ["Ethereum"],
+        chainTvls: { Ethereum: 100 },
+        oraclesByChain: {},
+        symbol: "VP",
+        logo: "",
+        url: "",
+        referralUrl: "",
+        parentProtocol: undefined,
+        governanceID: undefined,
+        gecko_id: undefined,
+        tvl: 100,
+      } as any,
+      {
+        id: "7818",
+        name: "Quai Network",
+        category: "Chain",
+        chains: ["Quai"],
+        chainTvls: { Quai: 0 },
+        oraclesByChain: {},
+        symbol: "QUAI",
+        logo: "",
+        url: "",
+        referralUrl: "",
+        parentProtocol: undefined,
+        governanceID: undefined,
+        gecko_id: "quai-network",
+        tvl: 0,
+      } as any,
+    ]);
+    mockedGetProtocolTvl.mockImplementation(async (protocol: any) => {
+      if (protocol.id === "7818") {
+        return {
+          tvl: 0,
+          tvlPrevDay: 0,
+          tvlPrevWeek: 0,
+          tvlPrevMonth: 0,
+          chainTvls: {
+            Quai: {
+              tvl: 0,
+              tvlPrevDay: 0,
+              tvlPrevWeek: 0,
+              tvlPrevMonth: 0,
+            },
+          },
+        } as any;
+      }
+
+      return {
+        tvl: 100,
+        tvlPrevDay: 90,
+        tvlPrevWeek: 80,
+        tvlPrevMonth: 70,
+        chainTvls: {
+          Ethereum: {
+            tvl: 100,
+            tvlPrevDay: 90,
+            tvlPrevWeek: 80,
+            tvlPrevMonth: 70,
+          },
+        },
+      } as any;
+    });
+    mockedReadRouteData.mockResolvedValue({
+      hyperevm: {},
+    });
+
+    const { protocols2Data } = await storeGetProtocols({
+      getCoinMarkets: async () => ({}),
+    });
+
+    expect(protocols2Data.protocols.map((p: any) => p.name)).toEqual(["Visible Protocol"]);
+    expect(protocols2Data.chains).toEqual(expect.arrayContaining(["Ethereum", "Quai", "Akash", "Arweave"]));
     expect(protocols2Data.chains).not.toContain("HyperEVM");
   });
 
@@ -196,7 +308,8 @@ describe("storeGetProtocols visible chain filtering", () => {
     });
 
     expect(protocols2Data.protocols.map((p: any) => p.chains)).toEqual([["Ethereum"], ["Pharos"]]);
-    expect(protocols2Data.chains).toEqual(["Ethereum", "Pharos"]);
+    expect(protocols2Data.chains).toEqual(expect.arrayContaining(["Ethereum", "Pharos", "Akash", "Arweave"]));
+    expect(protocols2Data.chains).not.toContain("HyperEVM");
   });
 
   test("storeGetProtocols falls back to cached visible chains when dimensions cache is missing or empty", async () => {
@@ -242,7 +355,7 @@ describe("storeGetProtocols visible chain filtering", () => {
       getCoinMarkets: async () => ({}),
     });
 
-    expect(protocols2Data.chains).toEqual(["OP Mainnet", "Hyperliquid L1"]);
+    expect(protocols2Data.chains).toEqual(expect.arrayContaining(["OP Mainnet", "Hyperliquid L1", "Akash", "Arweave"]));
     expect(protocols2Data.chains).not.toContain("HyperEVM");
   });
 });
